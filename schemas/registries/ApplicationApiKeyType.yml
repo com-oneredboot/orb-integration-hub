@@ -1,19 +1,21 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:38d08b15703a1ee9734a4e142a57ffc3f58cef2a4313c7b08f100d6a9e40c6d8"
 name: ApplicationApiKeyType
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Type of API key (publishable for frontend, secret for backend)"
-
+description: Type of API key (publishable for frontend, secret for backend)
 items:
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown key type"
+    value: UNKNOWN
+    description: Unknown key type
   PUBLISHABLE:
-    value: "PUBLISHABLE"
-    description: "Frontend-safe key with pk_ prefix, validated against allowed origins"
+    value: PUBLISHABLE
+    description: Frontend-safe key with pk_ prefix, validated against allowed origins
   SECRET:
-    value: "SECRET"
-    description: "Backend-only key with sk_ prefix, full permissions"
+    value: SECRET
+    description: Backend-only key with sk_ prefix, full permissions
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

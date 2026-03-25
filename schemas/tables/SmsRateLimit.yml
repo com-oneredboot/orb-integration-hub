@@ -1,44 +1,32 @@
-# file: schemas/entities/SmsRateLimit.yml
-# author: Generated for SMS rate limiting functionality  
-# date: 2025-06-21
-# description: yaml file containing the SmsRateLimit table schema for tracking SMS request rates
-
-type: dynamodb
-pitr_enabled: false
-version: '1.0'
+version: '1'
 name: SmsRateLimit
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
 model:
-  ttl:
-    enabled: true
-    attribute: ttl
-  authConfig:
+  attributes:
+  - name: phoneNumber
+    type: string
+    description: Phone number used as the rate limit key (primary key)
+    required: true
+  - name: requestCount
+    type: integer
+    description: Number of SMS requests made within the rate limit window
+    required: true
+  - name: firstRequestTime
+    type: timestamp
+    description: Timestamp of the first request in the current rate limit window
+    required: true
+  - name: ttl
+    type: integer
+    description: Time-to-live timestamp for automatic record cleanup
+    required: true
+dynamodb:
+  partition_key: phoneNumber
+  pitr_enabled: false
+appsync:
+  auth_config:
     cognitoAuthentication:
       groups:
         OWNER:
-          - '*'
+        - '*'
         USER:
-          - '*'
-  keys:
-    primary:
-      partition: phoneNumber
-  attributes:
-    phoneNumber:
-      type: string
-      required: true
-      description: Phone number used as the rate limit key (primary key)
-    requestCount:
-      type: number
-      required: true
-      description: Number of SMS requests made within the rate limit window
-    firstRequestTime:
-      type: timestamp
-      required: true
-      description: Timestamp of the first request in the current rate limit window
-    ttl:
-      type: number
-      required: true
-      description: Time-to-live timestamp for automatic record cleanup
+        - '*'
+hash: "sha256:b5b2502451d3b76f9cf54c91bacbf274fa51ccd7a63d49d7bcc8566bc7854354"

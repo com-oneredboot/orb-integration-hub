@@ -1,31 +1,33 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:5e2bd8020316235ddf8003edd534acb3fd1cf3e2aae36d3831b784bc0f1ae99f"
 name: RecoveryAction
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Recovery actions determined by the smart check flow"
-
+description: Recovery actions determined by the smart check flow
 items:
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown action"
+    value: UNKNOWN
+    description: Unknown action
   NEW_SIGNUP:
-    value: "NEW_SIGNUP"
-    description: "User needs to complete new signup"
+    value: NEW_SIGNUP
+    description: User needs to complete new signup
   RESEND_VERIFICATION:
-    value: "RESEND_VERIFICATION"
-    description: "Resend email verification code"
+    value: RESEND_VERIFICATION
+    description: Resend email verification code
   CREATE_DYNAMO_RECORD:
-    value: "CREATE_DYNAMO_RECORD"
-    description: "Create DynamoDB record for existing Cognito user"
+    value: CREATE_DYNAMO_RECORD
+    description: Create DynamoDB record for existing Cognito user
   LOGIN:
-    value: "LOGIN"
-    description: "User can proceed to login"
+    value: LOGIN
+    description: User can proceed to login
   PASSWORD_RESET:
-    value: "PASSWORD_RESET"
-    description: "User needs to reset password"
+    value: PASSWORD_RESET
+    description: User needs to reset password
   CONTACT_SUPPORT:
-    value: "CONTACT_SUPPORT"
-    description: "User needs to contact support"
+    value: CONTACT_SUPPORT
+    description: User needs to contact support
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

@@ -1,28 +1,30 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:74f40b8a6c583c1dbad1061f6b7ab5097458650369945e99393d1889e4b1f7c9"
 name: OrganizationUserStatus
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Status of a user's membership in an organization"
-
+description: Status of a user's membership in an organization
 items:
   ACTIVE:
-    value: "ACTIVE"
-    description: "User is an active member"
+    value: ACTIVE
+    description: User is an active member
   INACTIVE:
-    value: "INACTIVE"
-    description: "User membership is inactive"
+    value: INACTIVE
+    description: User membership is inactive
   INVITED:
-    value: "INVITED"
-    description: "User has been invited but not yet responded"
+    value: INVITED
+    description: User has been invited but not yet responded
   PENDING:
-    value: "PENDING"
-    description: "User membership is pending approval"
+    value: PENDING
+    description: User membership is pending approval
   REJECTED:
-    value: "REJECTED"
-    description: "User membership was rejected"
+    value: REJECTED
+    description: User membership was rejected
   REMOVED:
-    value: "REMOVED"
-    description: "User was removed from the organization"
+    value: REMOVED
+    description: User was removed from the organization
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

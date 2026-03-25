@@ -1,29 +1,30 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:b407c6b2bdd673e179e5ba556057eab26c3906da582438a41532c7d4d4182d0c"
 name: UserStatus
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-  - graphql-sdk
-description: "User account status"
-
+description: User account status
 items:
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown status"
+    value: UNKNOWN
+    description: Unknown status
   ACTIVE:
-    value: "ACTIVE"
-    description: "Active user"
+    value: ACTIVE
+    description: Active user
   INACTIVE:
-    value: "INACTIVE"
-    description: "Inactive user"
+    value: INACTIVE
+    description: Inactive user
   PENDING:
-    value: "PENDING"
-    description: "Pending activation"
+    value: PENDING
+    description: Pending activation
   REJECTED:
-    value: "REJECTED"
-    description: "Rejected user"
+    value: REJECTED
+    description: Rejected user
   DELETED:
-    value: "DELETED"
-    description: "Deleted user"
+    value: DELETED
+    description: Deleted user
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

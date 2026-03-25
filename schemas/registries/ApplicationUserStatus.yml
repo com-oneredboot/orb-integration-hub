@@ -1,28 +1,30 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:675dc09719cf3fc234ff624a9d0ae25c39d0c4fd65983dc1a2a57dacc2f1a1d9"
 name: ApplicationUserStatus
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Application user membership status"
-
+description: Application user membership status
 items:
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown status"
+    value: UNKNOWN
+    description: Unknown status
   ACTIVE:
-    value: "ACTIVE"
-    description: "Active membership"
+    value: ACTIVE
+    description: Active membership
   INACTIVE:
-    value: "INACTIVE"
-    description: "Inactive membership"
+    value: INACTIVE
+    description: Inactive membership
   PENDING:
-    value: "PENDING"
-    description: "Pending approval"
+    value: PENDING
+    description: Pending approval
   REJECTED:
-    value: "REJECTED"
-    description: "Rejected membership"
+    value: REJECTED
+    description: Rejected membership
   DELETED:
-    value: "DELETED"
-    description: "Deleted membership"
+    value: DELETED
+    description: Deleted membership
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

@@ -1,25 +1,27 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:8edc8db5f7fec6871b50b826055994ad2512a76229db2dfa345a588ffb1eb5a9"
 name: NotificationType
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Types of notifications that can be sent to users"
-
+description: Types of notifications that can be sent to users
 items:
   APPLICATION_TRANSFER_REQUEST:
-    value: "APPLICATION_TRANSFER_REQUEST"
-    description: "Request to transfer application ownership"
+    value: APPLICATION_TRANSFER_REQUEST
+    description: Request to transfer application ownership
   APPLICATION_TRANSFER_COMPLETED:
-    value: "APPLICATION_TRANSFER_COMPLETED"
-    description: "Application ownership transfer completed"
+    value: APPLICATION_TRANSFER_COMPLETED
+    description: Application ownership transfer completed
   ORGANIZATION_INVITATION_RECEIVED:
-    value: "ORGANIZATION_INVITATION_RECEIVED"
-    description: "User received an organization invitation"
+    value: ORGANIZATION_INVITATION_RECEIVED
+    description: User received an organization invitation
   ORGANIZATION_INVITATION_ACCEPTED:
-    value: "ORGANIZATION_INVITATION_ACCEPTED"
-    description: "Organization invitation was accepted"
+    value: ORGANIZATION_INVITATION_ACCEPTED
+    description: Organization invitation was accepted
   ORGANIZATION_INVITATION_REJECTED:
-    value: "ORGANIZATION_INVITATION_REJECTED"
-    description: "Organization invitation was rejected"
+    value: ORGANIZATION_INVITATION_REJECTED
+    description: Organization invitation was rejected
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

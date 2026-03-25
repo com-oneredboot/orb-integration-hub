@@ -1,88 +1,76 @@
-# file: schemas/lambdas/GetCurrentUser.yml
-# author: Corey Dale Peters
-# date: 2026-01-23
-# description: GraphQL query schema for getting the current authenticated user's record.
-#              This is a secure endpoint that extracts cognitoSub from the caller's token
-#              and only returns their own user record - users cannot query other users.
-
-type: lambda
+version: '1'
 name: GetCurrentUser
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
 model:
+  attributes:
+  - name: userId
+    type: string
+    description: User ID (same as cognitoSub)
+    required: false
+  - name: cognitoId
+    type: string
+    description: Cognito username
+    required: false
+  - name: cognitoSub
+    type: string
+    description: Cognito user sub (UUID)
+    required: false
+  - name: email
+    type: string
+    description: User's email address
+    required: false
+  - name: firstName
+    type: string
+    description: User's first name
+    required: false
+  - name: lastName
+    type: string
+    description: User's last name
+    required: false
+  - name: status
+    type: string
+    description: Current user status
+    required: false
+    enum_type: UserStatus
+  - name: phoneNumber
+    type: string
+    description: User's phone number
+    required: false
+  - name: groups
+    type: list
+    description: Cognito groups the user belongs to
+    required: false
+    items: string
+  - name: emailVerified
+    type: boolean
+    description: Whether email is verified
+    required: false
+  - name: phoneVerified
+    type: boolean
+    description: Whether phone is verified
+    required: false
+  - name: mfaEnabled
+    type: boolean
+    description: Whether MFA is enabled
+    required: false
+  - name: mfaSetupComplete
+    type: boolean
+    description: Whether MFA setup is complete
+    required: false
+  - name: createdAt
+    type: timestamp
+    description: Record creation timestamp
+    required: false
+  - name: updatedAt
+    type: timestamp
+    description: Record update timestamp
+    required: false
+lambda:
   operation: query
-  authConfig:
+  auth_config:
     cognitoAuthentication:
       groups:
         USER:
-          - GetCurrentUser
+        - GetCurrentUser
         OWNER:
-          - GetCurrentUser
-  attributes:
-    # No input required - Lambda extracts cognitoSub from AppSync identity context
-    
-    # Response attributes (full user record)
-    userId:
-      type: string
-      required: false
-      description: User ID (same as cognitoSub)
-    cognitoId:
-      type: string
-      required: false
-      description: Cognito username
-    cognitoSub:
-      type: string
-      required: false
-      description: Cognito user sub (UUID)
-    email:
-      type: string
-      required: false
-      description: User's email address
-    firstName:
-      type: string
-      required: false
-      description: User's first name
-    lastName:
-      type: string
-      required: false
-      description: User's last name
-    status:
-      type: string
-      required: false
-      enum_type: UserStatus
-      description: Current user status
-    phoneNumber:
-      type: string
-      required: false
-      description: User's phone number
-    groups:
-      type: array
-      items: string
-      required: false
-      description: Cognito groups the user belongs to
-    emailVerified:
-      type: boolean
-      required: false
-      description: Whether email is verified
-    phoneVerified:
-      type: boolean
-      required: false
-      description: Whether phone is verified
-    mfaEnabled:
-      type: boolean
-      required: false
-      description: Whether MFA is enabled
-    mfaSetupComplete:
-      type: boolean
-      required: false
-      description: Whether MFA setup is complete
-    createdAt:
-      type: timestamp
-      required: false
-      description: Record creation timestamp
-    updatedAt:
-      type: timestamp
-      required: false
-      description: Record update timestamp
+        - GetCurrentUser
+hash: "sha256:2b23aa83298e4a78dd5cb2271a305036ba13d60d577215b6843eee735acaf4fe"

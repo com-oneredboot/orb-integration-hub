@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- Schema Generator v3 Upgrade
+  - Upgraded orb-schema-generator from v2.0.13 to v3.2.7
+  - Migrated all 50 YAML schemas from v2 dict-style to v3 list-style format
+  - Converted schema config to v2.0 `output.code.*` format via `orb-schema migrate-config`
+  - Updated schema tests to validate v3 structure (list attributes, hash, no `type` field)
+  - Fixed test mocking for `get_owned_organization_ids` and `PermissionResolutionService` imports
+  - All code artifacts regenerated: Python models, TypeScript models, GraphQL schemas, CDK constructs
+  - Related issues: #111, #133
+  - Spec: `.kiro/specs/schema-generator-v3-upgrade/`
+
 - Console Logging Cleanup
   - Replaced all `console.log()` and `console.info()` with `console.debug()` in production code
   - Debug messages now only appear when browser console filter is set to "Verbose"

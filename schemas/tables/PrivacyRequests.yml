@@ -1,114 +1,96 @@
-# file: schemas/tables/PrivacyRequests.yml
-# author: orb-integration-hub
-# date: 2026-01-09
-# description: PrivacyRequests table schema for GDPR/CCPA privacy request management
-
-type: dynamodb
-pitr_enabled: false
-version: '1.0'
+version: '1'
 name: PrivacyRequests
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
 model:
-  authConfig:
+  attributes:
+  - name: requestId
+    type: string
+    description: Unique identifier for the privacy request
+    required: true
+  - name: organizationId
+    type: string
+    description: ID of the organization handling the request
+    required: true
+  - name: requestType
+    type: string
+    description: Type of privacy request (DATA_ACCESS, DATA_DELETION, etc.)
+    required: true
+    enum_type: PrivacyRequestType
+  - name: status
+    type: string
+    description: Current status of the request
+    required: true
+    enum_type: PrivacyRequestStatus
+  - name: dataSubjectEmail
+    type: string
+    description: Email of the data subject making the request
+    required: true
+  - name: dataSubjectName
+    type: string
+    description: Name of the data subject
+    required: false
+  - name: legalBasis
+    type: string
+    description: Legal basis for the request (GDPR Article, CCPA Right, etc.)
+    required: true
+    enum_type: LegalBasis
+  - name: description
+    type: string
+    description: Additional details about the request
+    required: false
+  - name: receivedAt
+    type: timestamp
+    description: When the request was received
+    required: true
+  - name: deadline
+    type: timestamp
+    description: Deadline for completing the request
+    required: true
+  - name: completedAt
+    type: timestamp
+    description: When the request was completed
+    required: false
+  - name: assignedTo
+    type: string
+    description: ID of the employee assigned to handle the request
+    required: false
+  - name: notes
+    type: string
+    description: Internal notes about the request
+    required: false
+  - name: createdAt
+    type: timestamp
+    description: When the record was created
+    required: true
+  - name: updatedAt
+    type: timestamp
+    description: When the record was last updated
+    required: true
+dynamodb:
+  partition_key: requestId
+  gsi:
+  - name: RequestTypeIndex
+    partition_key: requestType
+    projection_type: ALL
+    sort_key: receivedAt
+  - name: DataSubjectIndex
+    partition_key: dataSubjectEmail
+    projection_type: ALL
+    sort_key: receivedAt
+  - name: OrganizationIndex
+    partition_key: organizationId
+    projection_type: ALL
+    sort_key: receivedAt
+  - name: StatusIndex
+    partition_key: status
+    projection_type: ALL
+    sort_key: deadline
+  pitr_enabled: false
+appsync:
+  auth_config:
     cognitoAuthentication:
       groups:
         OWNER:
-          - '*'
+        - '*'
         EMPLOYEE:
-          - '*'
-  keys:
-    primary:
-      partition: requestId
-      description: Primary key for privacy requests
-    secondary:
-      - name: RequestTypeIndex
-        type: GSI
-        partition: requestType
-        sort: receivedAt
-        projection_type: ALL
-        description: Index for querying requests by type
-      - name: DataSubjectIndex
-        type: GSI
-        partition: dataSubjectEmail
-        sort: receivedAt
-        projection_type: ALL
-        description: Index for querying requests by data subject
-      - name: OrganizationIndex
-        type: GSI
-        partition: organizationId
-        sort: receivedAt
-        projection_type: ALL
-        description: Index for querying requests by organization
-      - name: StatusIndex
-        type: GSI
-        partition: status
-        sort: deadline
-        projection_type: ALL
-        description: Index for querying requests by status and deadline
-  attributes:
-    requestId:
-      type: string
-      required: true
-      description: Unique identifier for the privacy request
-    organizationId:
-      type: string
-      required: true
-      description: ID of the organization handling the request
-    requestType:
-      type: string
-      required: true
-      enum_type: PrivacyRequestType
-      description: Type of privacy request (DATA_ACCESS, DATA_DELETION, etc.)
-    status:
-      type: string
-      required: true
-      enum_type: PrivacyRequestStatus
-      description: Current status of the request
-    dataSubjectEmail:
-      type: string
-      required: true
-      description: Email of the data subject making the request
-    dataSubjectName:
-      type: string
-      required: false
-      description: Name of the data subject
-    legalBasis:
-      type: string
-      required: true
-      enum_type: LegalBasis
-      description: Legal basis for the request (GDPR Article, CCPA Right, etc.)
-    description:
-      type: string
-      required: false
-      description: Additional details about the request
-    receivedAt:
-      type: timestamp
-      required: true
-      description: When the request was received
-    deadline:
-      type: timestamp
-      required: true
-      description: Deadline for completing the request
-    completedAt:
-      type: timestamp
-      required: false
-      description: When the request was completed
-    assignedTo:
-      type: string
-      required: false
-      description: ID of the employee assigned to handle the request
-    notes:
-      type: string
-      required: false
-      description: Internal notes about the request
-    createdAt:
-      type: timestamp
-      required: true
-      description: When the record was created
-    updatedAt:
-      type: timestamp
-      required: true
-      description: When the record was last updated
+        - '*'
+hash: "sha256:ba59086efe3bf069ab98b9a1c5c2ae391f1a51b8741c32d803ba7a29760ed37f"

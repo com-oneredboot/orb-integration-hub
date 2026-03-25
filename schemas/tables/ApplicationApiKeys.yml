@@ -1,124 +1,98 @@
-# file: schemas/tables/ApplicationApiKeys.yml
-# author: orb-integration-hub
-# date: 2026-01-27
-# description: ApplicationApiKeys table schema for managing API keys per application environment
-
-type: dynamodb
-pitr_enabled: false
-version: '1.0'
+version: '1'
 name: ApplicationApiKeys
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
 model:
-  authConfig:
+  attributes:
+  - name: applicationApiKeyId
+    type: string
+    description: Unique identifier for the API key record (primary key)
+    required: true
+  - name: applicationId
+    type: string
+    description: ID of the application this key belongs to (foreign key to Applications)
+    required: true
+  - name: organizationId
+    type: string
+    description: ID of the organization (denormalized for context)
+    required: true
+  - name: environment
+    type: string
+    description: Environment this key is valid for
+    required: true
+    enum_type: Environment
+  - name: keyHash
+    type: string
+    description: SHA-256 hash of the API key (for secure lookup)
+    required: true
+  - name: keyPrefix
+    type: string
+    description: First 12 chars of key for display (e.g., pk_dev_xxxx or sk_dev_xxxx)
+    required: true
+  - name: keyType
+    type: string
+    description: Type of API key (PUBLISHABLE for frontend, SECRET for backend)
+    required: true
+    enum_type: ApplicationApiKeyType
+  - name: permissions
+    type: list
+    description: List of permission strings for this key (e.g., read:users, write:groups)
+    required: false
+    items: string
+  - name: status
+    type: string
+    description: Current status of the API key
+    required: true
+    enum_type: ApplicationApiKeyStatus
+  - name: nextKeyHash
+    type: string
+    description: Hash of the next key during rotation (both keys valid)
+    required: false
+  - name: activatesAt
+    type: timestamp
+    description: Future activation timestamp (null = immediate activation)
+    required: false
+  - name: expiresAt
+    type: timestamp
+    description: Expiration timestamp for ROTATING keys (7 days after regeneration)
+      or REVOKED keys (set to revokedAt)
+    required: false
+  - name: revokedAt
+    type: timestamp
+    description: When the key was revoked (null if not revoked)
+    required: false
+  - name: lastUsedAt
+    type: timestamp
+    description: Timestamp of last key usage
+    required: false
+  - name: createdAt
+    type: timestamp
+    description: When the key was created
+    required: true
+  - name: updatedAt
+    type: timestamp
+    description: When the key was last updated
+    required: true
+  - name: ttl
+    type: integer
+    description: DynamoDB TTL attribute (Unix timestamp for auto-deletion 30 days
+      after expiresAt)
+    required: false
+dynamodb:
+  partition_key: applicationApiKeyId
+  gsi:
+  - name: AppEnvKeyIndex
+    partition_key: applicationId
+    projection_type: ALL
+    sort_key: environment
+  - name: KeyLookupIndex
+    partition_key: keyHash
+    projection_type: ALL
+  pitr_enabled: false
+appsync:
+  auth_config:
     cognitoAuthentication:
       groups:
         OWNER:
-          - '*'
+        - '*'
         EMPLOYEE:
-          - '*'
-  keys:
-    primary:
-      partition: applicationApiKeyId
-      description: Primary key for API keys (unique for each key)
-    secondary:
-      - name: AppEnvKeyIndex
-        type: GSI
-        partition: applicationId
-        sort: environment
-        projection_type: ALL
-        description: Index for querying keys by application and environment
-      - name: KeyLookupIndex
-        type: GSI
-        partition: keyHash
-        projection_type: ALL
-        description: Index for looking up keys by hash during validation
-  attributes:
-    applicationApiKeyId:
-      type: string
-      required: true
-      description: Unique identifier for the API key record (primary key)
-    applicationId:
-      type: string
-      required: true
-      description: ID of the application this key belongs to (foreign key to Applications)
-    organizationId:
-      type: string
-      required: true
-      description: ID of the organization (denormalized for context)
-    environment:
-      type: string
-      required: true
-      enum_type: Environment
-      enum_values:
-        - PRODUCTION
-        - STAGING
-        - DEVELOPMENT
-        - TEST
-        - PREVIEW
-      description: Environment this key is valid for
-    keyHash:
-      type: string
-      required: true
-      description: SHA-256 hash of the API key (for secure lookup)
-    keyPrefix:
-      type: string
-      required: true
-      description: First 12 chars of key for display (e.g., pk_dev_xxxx or sk_dev_xxxx)
-    keyType:
-      type: string
-      required: true
-      enum_type: ApplicationApiKeyType
-      enum_values:
-        - PUBLISHABLE
-        - SECRET
-      description: Type of API key (PUBLISHABLE for frontend, SECRET for backend)
-    permissions:
-      type: array
-      items: string
-      required: false
-      description: List of permission strings for this key (e.g., read:users, write:groups)
-    status:
-      type: string
-      required: true
-      enum_type: ApplicationApiKeyStatus
-      enum_values:
-        - ACTIVE
-        - ROTATING
-        - REVOKED
-        - EXPIRED
-      description: Current status of the API key
-    nextKeyHash:
-      type: string
-      required: false
-      description: Hash of the next key during rotation (both keys valid)
-    activatesAt:
-      type: timestamp
-      required: false
-      description: Future activation timestamp (null = immediate activation)
-    expiresAt:
-      type: timestamp
-      required: false
-      description: Expiration timestamp for ROTATING keys (7 days after regeneration) or REVOKED keys (set to revokedAt)
-    revokedAt:
-      type: timestamp
-      required: false
-      description: When the key was revoked (null if not revoked)
-    lastUsedAt:
-      type: timestamp
-      required: false
-      description: Timestamp of last key usage
-    createdAt:
-      type: timestamp
-      required: true
-      description: When the key was created
-    updatedAt:
-      type: timestamp
-      required: true
-      description: When the key was last updated
-    ttl:
-      type: number
-      required: false
-      description: DynamoDB TTL attribute (Unix timestamp for auto-deletion 30 days after expiresAt)
+        - '*'
+hash: "sha256:7606774a84aae3710c24b7a06bb0074678a6607f3623984fbf61e7138d5e3983"

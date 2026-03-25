@@ -1,25 +1,27 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:cb17295bbcb9ae5becab8fd1af3bf0a13a1ce9fa3a42795ac34b18e735bc8065"
 name: ApplicationRoleType
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Types of application roles"
-
+description: Types of application roles
 items:
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown role type"
+    value: UNKNOWN
+    description: Unknown role type
   ADMIN:
-    value: "ADMIN"
-    description: "Administrator role"
+    value: ADMIN
+    description: Administrator role
   USER:
-    value: "USER"
-    description: "Standard user role"
+    value: USER
+    description: Standard user role
   GUEST:
-    value: "GUEST"
-    description: "Guest role"
+    value: GUEST
+    description: Guest role
   CUSTOM:
-    value: "CUSTOM"
-    description: "Custom role"
+    value: CUSTOM
+    description: Custom role
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

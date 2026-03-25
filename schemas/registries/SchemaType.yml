@@ -1,49 +1,51 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:26a4c2861bc680dee89466173c73d96d7925332781ed1b7c986e88c272536d73"
 name: SchemaType
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Types of schemas supported by the schema generator"
-
+description: Types of schemas supported by the schema generator
 items:
   STANDARD:
-    value: "STANDARD"
-    description: "Standard schema type"
+    value: STANDARD
+    description: Standard schema type
   DYNAMODB:
-    value: "DYNAMODB"
-    description: "DynamoDB table schema"
+    value: DYNAMODB
+    description: DynamoDB table schema
   POSTGRES:
-    value: "POSTGRES"
-    description: "PostgreSQL database schema"
+    value: POSTGRES
+    description: PostgreSQL database schema
   MYSQL:
-    value: "MYSQL"
-    description: "MySQL database schema"
+    value: MYSQL
+    description: MySQL database schema
   MSSQL:
-    value: "MSSQL"
-    description: "Microsoft SQL Server schema"
+    value: MSSQL
+    description: Microsoft SQL Server schema
   SQLITE:
-    value: "SQLITE"
-    description: "SQLite database schema"
+    value: SQLITE
+    description: SQLite database schema
   LAMBDA:
-    value: "LAMBDA"
-    description: "AWS Lambda function schema"
+    value: LAMBDA
+    description: AWS Lambda function schema
   LAMBDA_SECURED:
-    value: "LAMBDA_SECURED"
-    description: "Secured AWS Lambda function schema"
+    value: LAMBDA_SECURED
+    description: Secured AWS Lambda function schema
   GRAPHQL:
-    value: "GRAPHQL"
-    description: "GraphQL schema"
+    value: GRAPHQL
+    description: GraphQL schema
   REGISTRY:
-    value: "REGISTRY"
-    description: "Registry/enum schema"
+    value: REGISTRY
+    description: Registry/enum schema
   GRAPH:
-    value: "GRAPH"
-    description: "Graph database schema"
+    value: GRAPH
+    description: Graph database schema
   REST:
-    value: "REST"
-    description: "REST API schema"
+    value: REST
+    description: REST API schema
   ELASTICSEARCH:
-    value: "ELASTICSEARCH"
-    description: "Elasticsearch schema"
+    value: ELASTICSEARCH
+    description: Elasticsearch schema
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

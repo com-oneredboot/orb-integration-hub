@@ -1,28 +1,30 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:87b79e59b533188a748b2850a30d36e89abe64d4ef0d673e99b915aae696757f"
 name: Environment
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Application deployment environments"
-
+description: Application deployment environments
 items:
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown environment"
+    value: UNKNOWN
+    description: Unknown environment
   PRODUCTION:
-    value: "PRODUCTION"
-    description: "Production environment"
+    value: PRODUCTION
+    description: Production environment
   STAGING:
-    value: "STAGING"
-    description: "Staging environment"
+    value: STAGING
+    description: Staging environment
   DEVELOPMENT:
-    value: "DEVELOPMENT"
-    description: "Development environment"
+    value: DEVELOPMENT
+    description: Development environment
   TEST:
-    value: "TEST"
-    description: "Test environment"
+    value: TEST
+    description: Test environment
   PREVIEW:
-    value: "PREVIEW"
-    description: "Preview environment"
+    value: PREVIEW
+    description: Preview environment
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

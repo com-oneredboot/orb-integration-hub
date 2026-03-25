@@ -1,45 +1,38 @@
-# file: schemas/entities/Auth.yml
-# author: Corey Dale Peters
-# date: 2025-02-17
-# description: yaml file containing the Auth GraphQL type schema
-
-type: standard
+version: '1'
 name: Auth
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
 model:
   attributes:
-    statusCode:
-      type: number
-      required: true
-      description: HTTP or operation status code
-    isSignedIn:
-      type: boolean
-      required: false
-      description: Whether the user is signed in
-    message:
-      type: string
-      required: false
-      description: User-facing or system message
-    user:
-      type: Users
-      required: false
-      description: The user object (Users)
-    needsMFA:
-      type: boolean
-      required: false
-      description: Whether MFA is required
-    needsMFASetup:
-      type: boolean
-      required: false
-      description: Whether MFA setup is required
-    mfaType:
-      type: string
-      required: false
-      description: Type of MFA (e.g., 'sms', 'totp')
-    mfaSetupDetails:
-      type: MfaSetupDetails
-      required: false
-      description: Details for MFA setup (MfaSetupDetails) 
+  - name: statusCode
+    type: integer
+    description: HTTP or operation status code
+    required: true
+  - name: isSignedIn
+    type: boolean
+    description: Whether the user is signed in
+    required: false
+  - name: message
+    type: string
+    description: User-facing or system message
+    required: false
+  - name: user
+    type: Users
+    description: The user object (Users)
+    required: false
+  - name: needsMFA
+    type: boolean
+    description: Whether MFA is required
+    required: false
+  - name: needsMFASetup
+    type: boolean
+    description: Whether MFA setup is required
+    required: false
+  - name: mfaType
+    type: string
+    description: Type of MFA (e.g., 'sms', 'totp')
+    required: false
+  - name: mfaSetupDetails
+    type: MfaSetupDetails
+    description: Details for MFA setup (MfaSetupDetails)
+    required: false
+appsync: {}
+hash: "sha256:1a116656f428a85b9dd310776e68d028808ceccf4c9192190ada7767325eb03b"

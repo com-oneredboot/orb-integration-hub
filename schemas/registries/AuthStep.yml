@@ -1,52 +1,54 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:497bfee3a212320b7fa2ef69b548dbd8c045c03a4ac531cbeb8e89893b1453f3"
 name: AuthStep
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Authentication flow step states"
-
+description: Authentication flow step states
 items:
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown step"
+    value: UNKNOWN
+    description: Unknown step
   EMAIL_ENTRY:
-    value: "EMAIL_ENTRY"
-    description: "Initial email entry step"
+    value: EMAIL_ENTRY
+    description: Initial email entry step
   EMAIL:
-    value: "EMAIL"
-    description: "Email step (alias for EMAIL_ENTRY)"
+    value: EMAIL
+    description: Email step (alias for EMAIL_ENTRY)
   PASSWORD:
-    value: "PASSWORD"
-    description: "Password entry for existing users"
+    value: PASSWORD
+    description: Password entry for existing users
   PASSWORD_VERIFY:
-    value: "PASSWORD_VERIFY"
-    description: "Password verification step"
+    value: PASSWORD_VERIFY
+    description: Password verification step
   PASSWORD_SETUP:
-    value: "PASSWORD_SETUP"
-    description: "Password setup for new users"
+    value: PASSWORD_SETUP
+    description: Password setup for new users
   EMAIL_VERIFY:
-    value: "EMAIL_VERIFY"
-    description: "Email verification code entry"
+    value: EMAIL_VERIFY
+    description: Email verification code entry
   SIGNIN:
-    value: "SIGNIN"
-    description: "Sign in step for verified users"
+    value: SIGNIN
+    description: Sign in step for verified users
   MFA_SETUP:
-    value: "MFA_SETUP"
-    description: "MFA setup for users without MFA"
+    value: MFA_SETUP
+    description: MFA setup for users without MFA
   MFA_VERIFY:
-    value: "MFA_VERIFY"
-    description: "MFA code verification"
+    value: MFA_VERIFY
+    description: MFA code verification
   PASSWORD_RESET:
-    value: "PASSWORD_RESET"
-    description: "Password reset initiation"
+    value: PASSWORD_RESET
+    description: Password reset initiation
   PASSWORD_RESET_VERIFY:
-    value: "PASSWORD_RESET_VERIFY"
-    description: "Password reset code verification"
+    value: PASSWORD_RESET_VERIFY
+    description: Password reset code verification
   PASSWORD_RESET_CONFIRM:
-    value: "PASSWORD_RESET_CONFIRM"
-    description: "New password confirmation"
+    value: PASSWORD_RESET_CONFIRM
+    description: New password confirmation
   COMPLETE:
-    value: "COMPLETE"
-    description: "Authentication flow complete"
+    value: COMPLETE
+    description: Authentication flow complete
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

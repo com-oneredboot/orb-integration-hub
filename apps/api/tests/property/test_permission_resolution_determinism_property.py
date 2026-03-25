@@ -28,7 +28,19 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 # Add lambdas directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "lambdas" / "permission_resolution"))
+_permission_resolution_dir = Path(__file__).parent.parent.parent / "lambdas" / "permission_resolution"
+sys.path.insert(0, str(_permission_resolution_dir))
+
+# Import with explicit module reference to avoid conflicts with other index.py files
+import importlib.util
+_spec = importlib.util.spec_from_file_location(
+    "permission_resolution_index", _permission_resolution_dir / "index.py"
+)
+assert _spec is not None and _spec.loader is not None
+_perm_module = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_perm_module)
+sys.modules["permission_resolution_index"] = _perm_module
+PermissionResolutionService = _perm_module.PermissionResolutionService
 
 # Strategy for generating valid environment values
 environment_strategy = st.sampled_from(["PRODUCTION", "STAGING", "DEVELOPMENT", "TEST", "PREVIEW"])
@@ -139,8 +151,7 @@ class TestPermissionResolutionDeterminism:
             mock_dynamodb.Table.side_effect = mock_table
             mock_resource.return_value = mock_dynamodb
 
-            # Import after patching
-            from index import PermissionResolutionService
+            # PermissionResolutionService imported at module level
 
             service = PermissionResolutionService()
             service.user_roles_table = mock_user_roles_table
@@ -225,7 +236,7 @@ class TestPermissionResolutionDeterminism:
             mock_dynamodb.Table.return_value = mock_user_roles_table
             mock_resource.return_value = mock_dynamodb
 
-            from index import PermissionResolutionService
+            # PermissionResolutionService imported at module level
 
             service = PermissionResolutionService()
             service.user_roles_table = mock_user_roles_table

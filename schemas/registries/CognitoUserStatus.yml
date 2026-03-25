@@ -1,25 +1,27 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:2fa3450f9603bb33cf18815b7e8f790bf9705974642fb610462bea9a290090ab"
 name: CognitoUserStatus
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Cognito user status values returned by adminGetUser"
-
+description: Cognito user status values returned by adminGetUser
 items:
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown status"
+    value: UNKNOWN
+    description: Unknown status
   UNCONFIRMED:
-    value: "UNCONFIRMED"
-    description: "User has not confirmed their email"
+    value: UNCONFIRMED
+    description: User has not confirmed their email
   CONFIRMED:
-    value: "CONFIRMED"
-    description: "User has confirmed their email"
+    value: CONFIRMED
+    description: User has confirmed their email
   FORCE_CHANGE_PASSWORD:
-    value: "FORCE_CHANGE_PASSWORD"
-    description: "User must change their password"
+    value: FORCE_CHANGE_PASSWORD
+    description: User must change their password
   RESET_REQUIRED:
-    value: "RESET_REQUIRED"
-    description: "User must reset their password"
+    value: RESET_REQUIRED
+    description: User must reset their password
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

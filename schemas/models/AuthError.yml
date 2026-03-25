@@ -1,29 +1,22 @@
-# file: schemas/entities/AuthError.yml
-# author: Corey Dale Peters
-# date: 2025-02-17
-# description: yaml file containing the AuthError GraphQL type schema
-
-type: standard
+version: '1'
 name: AuthError
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
 model:
   attributes:
-    code:
-      type: string
-      required: true
-      description: Error code (e.g., AUTH-001)
-    message:
-      type: string
-      required: true
-      description: User-facing error message
-    description:
-      type: string
-      required: false
-      description: Optional technical description
-    details:
-      type: object
-      required: false
-      description: Optional extra data or context 
+  - name: code
+    type: string
+    description: Error code (e.g., AUTH-001)
+    required: true
+  - name: message
+    type: string
+    description: User-facing error message
+    required: true
+  - name: description
+    type: string
+    description: Optional technical description
+    required: false
+  - name: details
+    type: map
+    description: Optional extra data or context
+    required: false
+appsync: {}
+hash: "sha256:6f0843db29a1d805c554cae4c201eb29b58e3d3104da27b7d81dcef3bea1a4eb"

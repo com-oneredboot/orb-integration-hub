@@ -1,25 +1,27 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:3ac690ba992534a7a03192b94c55857d5a830565b3dfb3bdf442fdde0c4138db"
 name: ProfileSetupStep
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Profile setup flow steps"
-
+description: Profile setup flow steps
 items:
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown step"
+    value: UNKNOWN
+    description: Unknown step
   NAME:
-    value: "NAME"
-    description: "First name and last name entry"
+    value: NAME
+    description: First name and last name entry
   PHONE:
-    value: "PHONE"
-    description: "Phone number entry"
+    value: PHONE
+    description: Phone number entry
   PHONE_VERIFY:
-    value: "PHONE_VERIFY"
-    description: "SMS code verification"
+    value: PHONE_VERIFY
+    description: SMS code verification
   COMPLETE:
-    value: "COMPLETE"
-    description: "Profile setup complete"
+    value: COMPLETE
+    description: Profile setup complete
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

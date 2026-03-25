@@ -3,7 +3,6 @@ project:
   customerId: orb
   projectId: integration-hub
   environment: dev
-
 paths:
   schemas: ./schemas
   subdirectories:
@@ -13,7 +12,6 @@ paths:
     registries: registries
     graphql: graphql
     lambdas: lambdas
-
 output:
   code:
     python:
@@ -28,7 +26,6 @@ output:
           base_dir: ./apps/web/src/app
           enums_subdir: core/enums
           models_subdir: core/models
-          graphql_queries_subdir: core/graphql
     graphql:
       targets:
         graphql-main:
@@ -39,52 +36,10 @@ output:
     cdk:
       base_dir: ./infrastructure/cdk/generated
       language: python
-      api_definitions:
-        - name: main-api
-          auth:
-            default: AMAZON_COGNITO_USER_POOLS
-            cognito:
-              user_pool_ssm_param: "/${customerId}/${projectId}/${environment}/cognito/user-pool-id"
-          tables:
-            - Users
-            - Organizations
-            - OrganizationUsers
-            - Applications
-            - ApplicationRoles
-            - ApplicationUserRoles
-            - ApplicationEnvironmentConfig
-            - ApplicationApiKeys
-            - Notifications
-            - OwnershipTransferRequests
-            - PrivacyRequests
-            - SmsRateLimit
-          include_operations:
-            - "*"
-          schema_output: apps/api/graphql
-          resolvers_output: apps/api/graphql/resolvers
-          cdk_output: infrastructure/cdk/generated/main_api
-
-        - name: sdk-api
-          auth:
-            default: AWS_LAMBDA
-            lambda_authorizer:
-              function_arn_ssm_param: "/${customerId}/${projectId}/${environment}/lambda/authorizer/arn"
-              result_ttl_seconds: 300
-          tables:
-            - Users
-          include_operations:
-            - "CheckEmailExists"
-            - "CreateUserFromCognito"
-            - "GetApplicationUsers"
-          schema_output: apps/api/graphql-sdk
-          resolvers_output: apps/api/graphql-sdk/resolvers
-          cdk_output: infrastructure/cdk/generated/sdk_api
-
 generation:
   validate_schemas: true
   validate_graphql: true
   cleanup_old_files: true
-
 logging:
   level: INFO
   file: ./schema_generator.log

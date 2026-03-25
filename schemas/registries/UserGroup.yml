@@ -1,22 +1,26 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:20ef7e1c7de4e0d721e662a6b5a5d245289b5765118d57ef2024446bed23c714"
 name: UserGroup
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "User group types for Cognito authentication. Groups are additive - users can have multiple groups. Every user has at least USER group (baseline). CUSTOMER group is added when user pays for subscription."
-
+description: User group types for Cognito authentication. Groups are additive - users
+  can have multiple groups. Every user has at least USER group (baseline). CUSTOMER
+  group is added when user pays for subscription.
 items:
   USER:
-    value: "USER"
-    description: "Baseline group for all authenticated users"
+    value: USER
+    description: Baseline group for all authenticated users
   CUSTOMER:
-    value: "CUSTOMER"
-    description: "User paying for platform subscription - can create organizations"
+    value: CUSTOMER
+    description: User paying for platform subscription - can create organizations
   EMPLOYEE:
-    value: "EMPLOYEE"
-    description: "Internal platform team member"
+    value: EMPLOYEE
+    description: Internal platform team member
   OWNER:
-    value: "OWNER"
-    description: "Platform owner with full administrative access"
+    value: OWNER
+    description: Platform owner with full administrative access
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

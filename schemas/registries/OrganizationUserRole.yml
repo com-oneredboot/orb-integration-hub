@@ -1,16 +1,18 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:620303fdeae49bd4383d621047eff3d8bc624c1f9451deeb10a5f4f72c0013c0"
 name: OrganizationUserRole
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Roles a user can have within an organization"
-
+description: Roles a user can have within an organization
 items:
   ADMINISTRATOR:
-    value: "ADMINISTRATOR"
-    description: "Organization administrator with full access"
+    value: ADMINISTRATOR
+    description: Organization administrator with full access
   VIEWER:
-    value: "VIEWER"
-    description: "Read-only access to organization resources"
+    value: VIEWER
+    description: Read-only access to organization resources
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

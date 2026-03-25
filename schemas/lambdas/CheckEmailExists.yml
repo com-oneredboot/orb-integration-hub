@@ -1,30 +1,24 @@
-# file: schemas/lambdas/CheckEmailExists.yml
-# author: Corey Dale Peters
-# date: 2026-01-16
-# description: GraphQL query schema for checking email existence (public endpoint)
-
-type: lambda
+version: '1'
 name: CheckEmailExists
-targets:
-  - python-main
-  - ts-main
-  - graphql-sdk
 model:
-  operation: query
   attributes:
-    email:
-      type: string
-      required: true
-      description: Email address to check for existence
-    exists:
-      type: boolean
-      required: false
-      description: Whether the email exists in the system (response only)
-    cognitoStatus:
-      type: string
-      required: false
-      description: Cognito user status (UNCONFIRMED, CONFIRMED, FORCE_CHANGE_PASSWORD, etc.)
-    cognitoSub:
-      type: string
-      required: false
-      description: Cognito user ID (sub) if user exists in Cognito
+  - name: email
+    type: string
+    description: Email address to check for existence
+    required: true
+  - name: exists
+    type: boolean
+    description: Whether the email exists in the system (response only)
+    required: false
+  - name: cognitoStatus
+    type: string
+    description: Cognito user status (UNCONFIRMED, CONFIRMED, FORCE_CHANGE_PASSWORD,
+      etc.)
+    required: false
+  - name: cognitoSub
+    type: string
+    description: Cognito user ID (sub) if user exists in Cognito
+    required: false
+lambda:
+  operation: query
+hash: "sha256:a1d6833959e4bbfc62b38bdbc865fb1e962e057c258d8b61db789e07cf4d67db"

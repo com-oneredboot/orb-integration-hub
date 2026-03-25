@@ -1,26 +1,27 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:0dfaa68ad75858cbdf8fae661bebdf7696a655f21a55852ff5c996ca8eccd48d"
 name: ApplicationStatus
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-  - graphql-sdk
-description: "Application status"
-
+description: Application status
 items:
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown status"
+    value: UNKNOWN
+    description: Unknown status
   ACTIVE:
-    value: "ACTIVE"
-    description: "Active application"
+    value: ACTIVE
+    description: Active application
   INACTIVE:
-    value: "INACTIVE"
-    description: "Inactive application"
+    value: INACTIVE
+    description: Inactive application
   PENDING:
-    value: "PENDING"
-    description: "Pending activation"
+    value: PENDING
+    description: Pending activation
   DELETED:
-    value: "DELETED"
-    description: "Deleted application"
+    value: DELETED
+    description: Deleted application
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

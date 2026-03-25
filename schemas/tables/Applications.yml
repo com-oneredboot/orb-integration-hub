@@ -1,133 +1,83 @@
-# file: schemas/entities/Applications.yml
-# author: Corey Dale Peters
-# date: 2025-02-17
-# description: Canonical applications table. Referenced by ApplicationRoles and ApplicationUsers.
-
-# GROUP_TYPES: OWNER, ADMIN, SUPPORT, USER (see enum definition)
-
-type: dynamodb
-pitr_enabled: false
-version: '1.0'
+version: '1'
 name: Applications
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-  - graphql-sdk
 model:
-  authConfig:
+  attributes:
+  - name: applicationId
+    type: string
+    description: Unique identifier for the application (primary key)
+    required: true
+  - name: name
+    type: string
+    description: Name of the application
+    required: true
+  - name: description
+    type: string
+    description: Brief description of the application
+    required: false
+  - name: organizationId
+    type: string
+    description: ID of the organization this application belongs to (foreign key to
+      Organizations)
+    required: true
+  - name: ownerId
+    type: string
+    description: ID of the user who owns the application (foreign key to Users)
+    required: true
+  - name: status
+    type: string
+    description: Current status of the application
+    required: true
+    enum_type: ApplicationStatus
+  - name: createdAt
+    type: timestamp
+    description: When the application was created
+    required: true
+  - name: updatedAt
+    type: timestamp
+    description: When the application was last updated
+    required: true
+  - name: apiKey
+    type: string
+    description: Current active API key for the application
+    required: true
+  - name: apiKeyNext
+    type: string
+    description: Next API key for rotation (dual key system)
+    required: false
+  - name: environments
+    type: list
+    description: List of available environments for this application (max 5 for starter
+      plan)
+    required: true
+    items: string
+  - name: groupCount
+    type: integer
+    description: Count of ACTIVE application groups (denormalized for display)
+    required: false
+  - name: userCount
+    type: integer
+    description: Count of ACTIVE application group users (denormalized for display)
+    required: false
+  - name: roleCount
+    type: integer
+    description: Count of ACTIVE direct user role assignments (denormalized for display)
+    required: false
+dynamodb:
+  partition_key: applicationId
+  gsi:
+  - name: OrganizationAppsIndex
+    partition_key: organizationId
+    projection_type: ALL
+    sort_key: createdAt
+  pitr_enabled: false
+appsync:
+  auth_config:
     cognitoAuthentication:
       groups:
         OWNER:
-          - '*'
+        - '*'
         EMPLOYEE:
-          - '*'
+        - '*'
         CUSTOMER:
-          - '*'
-  keys:
-    primary:
-      partition: applicationId
-      description: Primary key for applications (unique for each application)
-    secondary:
-      - name: OrganizationAppsIndex
-        type: GSI
-        partition: organizationId
-        sort: createdAt
-        projection_type: ALL
-        description: Index for querying applications by organization with creation time ordering
-  attributes:
-    applicationId:
-      type: string
-      required: true
-      description: Unique identifier for the application (primary key)
-    name:
-      type: string
-      required: true
-      description: Name of the application
-    description:
-      type: string
-      required: false
-      description: Brief description of the application
-    organizationId:
-      type: string
-      required: true
-      description: ID of the organization this application belongs to (foreign key to Organizations)
-    ownerId:
-      type: string
-      required: true
-      description: ID of the user who owns the application (foreign key to Users)
-    status:
-      type: string
-      required: true
-      enum_type: ApplicationStatus
-      enum_values:
-        - ACTIVE
-        - INACTIVE
-        - ARCHIVED
-      description: Current status of the application
-    createdAt:
-      type: timestamp
-      required: true
-      description: When the application was created
-    updatedAt:
-      type: timestamp
-      required: true
-      description: When the application was last updated
-    apiKey:
-      type: string
-      required: true
-      description: Current active API key for the application
-    apiKeyNext:
-      type: string
-      required: false
-      description: Next API key for rotation (dual key system)
-    environments:
-      type: array
-      items: string
-      required: true
-      enum_values:
-        - PRODUCTION
-        - STAGING
-        - DEVELOPMENT
-        - TEST
-        - PREVIEW
-      description: List of available environments for this application (max 5 for starter plan)
-    groupCount:
-      type: number
-      required: false
-      description: Count of ACTIVE application groups (denormalized for display)
-    userCount:
-      type: number
-      required: false
-      description: Count of ACTIVE application group users (denormalized for display)
-    roleCount:
-      type: number
-      required: false
-      description: Count of ACTIVE direct user role assignments (denormalized for display)
-
-e2e:
-  enabled: true
-  auth_required: true
-  scenarios:
-    - create
-    - read
-    - update
-    - delete
-    - list
-    - detail
-    - round_trip
-  roles:
-    - OWNER
-    - EMPLOYEE
-  page_object: ApplicationsPage
-  routes:
-    list: /applications
-    detail: /applications/:id
-    create: /applications/new
-  test_data:
-    name: "Test Application"
-    description: "E2E test application"
-    status: "ACTIVE"
-    environments:
-      - "DEVELOPMENT"
-      - "STAGING"
+        - '*'
+hash: "sha256:1552774fac73ecd9179e0655969943125cc006895da430d9a353a4a8a23447bb"

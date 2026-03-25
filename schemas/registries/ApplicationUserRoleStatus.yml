@@ -1,19 +1,21 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:6a21e39b5f65d0962b83b7ed9b31d33b70c26dc6d14a5f18a7462bfa280ba991"
 name: ApplicationUserRoleStatus
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Application user role assignment status"
-
+description: Application user role assignment status
 items:
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown status"
+    value: UNKNOWN
+    description: Unknown status
   ACTIVE:
-    value: "ACTIVE"
-    description: "Active role assignment"
+    value: ACTIVE
+    description: Active role assignment
   DELETED:
-    value: "DELETED"
-    description: "Deleted role assignment"
+    value: DELETED
+    description: Deleted role assignment
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

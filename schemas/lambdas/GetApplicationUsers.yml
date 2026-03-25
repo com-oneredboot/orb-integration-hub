@@ -1,52 +1,44 @@
-# file: schemas/lambdas/GetApplicationUsers.yml
-# author: orb-integration-hub
-# date: 2026-02-09
-# description: Lambda query for retrieving application users with role assignments
-
-type: lambda
+version: '1'
 name: GetApplicationUsers
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
 model:
+  attributes:
+  - name: organizationIds
+    type: list
+    description: Filter by organization IDs
+    required: false
+    items:
+      type: string
+  - name: applicationIds
+    type: list
+    description: Filter by application IDs
+    required: false
+    items:
+      type: string
+  - name: environment
+    type: string
+    description: Filter by environment
+    required: false
+  - name: limit
+    type: integer
+    description: Maximum number of users to return (1-100)
+    required: false
+  - name: nextToken
+    type: string
+    description: Pagination token for next page
+    required: false
+  - name: users
+    type: list
+    description: List of users with their role assignments
+    required: true
+lambda:
   operation: query
-  authConfig:
+  auth_config:
     cognitoAuthentication:
       groups:
         OWNER:
-          - '*'
+        - '*'
         EMPLOYEE:
-          - '*'
+        - '*'
         CUSTOMER:
-          - '*'
-  attributes:
-    organizationIds:
-      type: array
-      items:
-        type: string
-      required: false
-      description: Filter by organization IDs
-    applicationIds:
-      type: array
-      items:
-        type: string
-      required: false
-      description: Filter by application IDs
-    environment:
-      type: string
-      required: false
-      description: Filter by environment
-    limit:
-      type: integer
-      required: false
-      description: Maximum number of users to return (1-100)
-    nextToken:
-      type: string
-      required: false
-      description: Pagination token for next page
-    users:
-      type: array
-      items_ref: UserWithRoles
-      required: true
-      description: List of users with their role assignments
+        - '*'
+hash: "sha256:e28b7208681aa1e9f1c61ed02a633725f019a508843e39adb8329d347ecb48ab"

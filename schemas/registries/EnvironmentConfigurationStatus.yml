@@ -1,25 +1,27 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:5b5590d80946b5a75c5025f02d72474c98fc13dc709385e24a2944272dab13d8"
 name: EnvironmentConfigurationStatus
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Overall configuration status of an environment"
-
+description: Overall configuration status of an environment
 items:
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown status"
+    value: UNKNOWN
+    description: Unknown status
   CONFIGURED:
-    value: "CONFIGURED"
-    description: "All required configuration is complete and valid"
+    value: CONFIGURED
+    description: All required configuration is complete and valid
   INCOMPLETE:
-    value: "INCOMPLETE"
-    description: "Some required configuration is missing or incomplete"
+    value: INCOMPLETE
+    description: Some required configuration is missing or incomplete
   NEEDS_ATTENTION:
-    value: "NEEDS_ATTENTION"
-    description: "Configuration exists but has issues that need attention"
+    value: NEEDS_ATTENTION
+    description: Configuration exists but has issues that need attention
   NOT_CONFIGURED:
-    value: "NOT_CONFIGURED"
-    description: "No configuration exists yet"
+    value: NOT_CONFIGURED
+    description: No configuration exists yet
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

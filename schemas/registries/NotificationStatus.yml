@@ -1,22 +1,24 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:741fe0d2e5828b610909194b9f2554a684d28b71d58f2d132745ca89c57d8f18"
 name: NotificationStatus
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Status of a notification"
-
+description: Status of a notification
 items:
   PENDING:
-    value: "PENDING"
-    description: "Notification is pending delivery or action"
+    value: PENDING
+    description: Notification is pending delivery or action
   READ:
-    value: "READ"
-    description: "Notification has been read"
+    value: READ
+    description: Notification has been read
   DISMISSED:
-    value: "DISMISSED"
-    description: "Notification was dismissed by user"
+    value: DISMISSED
+    description: Notification was dismissed by user
   EXPIRED:
-    value: "EXPIRED"
-    description: "Notification has expired"
+    value: EXPIRED
+    description: Notification has expired
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

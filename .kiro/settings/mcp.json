@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "orb-templates": {
-      "command": "C:\\Users\\corey\\.orb-mcp-venv\\Scripts\\python.exe",
+      "command": "/home/fishbeak/.local/share/virtualenvs/api-wJpyFxir/bin/python",
       "args": [
         "-m",
         "orb_templates_mcp.server"
@@ -13,6 +13,23 @@
         "get_workflow_template",
         "search_standards_tool",
         "get_document_tool"
+      ]
+    },
+    "orb-schema-generator": {
+      "command": "/home/fishbeak/.local/share/virtualenvs/api-wJpyFxir/bin/python",
+      "args": [
+        "-m",
+        "orb_schema_generator.mcp_server"
+      ],
+      "env": {
+        "ORB_SCHEMA_CONFIG": "/home/fishbeak/infrastructure/src/tpf-master-plan/organizations/com-oneredboot/repositories/orb-integration-hub/schema-generator.yml"
+      },
+      "disabled": false,
+      "autoApprove": [
+        "list_schemas",
+        "inspect_schema",
+        "validate_schema",
+        "generate_from_schema"
       ]
     }
   }

@@ -1,28 +1,30 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:96a058878906db7fee18710826f587e6c5652bbd77a7d7a020a291a8b59eb133"
 name: ApplicationRoleStatus
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Application role assignment status"
-
+description: Application role assignment status
 items:
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown status"
+    value: UNKNOWN
+    description: Unknown status
   ACTIVE:
-    value: "ACTIVE"
-    description: "Active role assignment"
+    value: ACTIVE
+    description: Active role assignment
   INACTIVE:
-    value: "INACTIVE"
-    description: "Inactive role assignment"
+    value: INACTIVE
+    description: Inactive role assignment
   PENDING:
-    value: "PENDING"
-    description: "Pending approval"
+    value: PENDING
+    description: Pending approval
   REJECTED:
-    value: "REJECTED"
-    description: "Rejected role assignment"
+    value: REJECTED
+    description: Rejected role assignment
   DELETED:
-    value: "DELETED"
-    description: "Deleted role assignment"
+    value: DELETED
+    description: Deleted role assignment
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

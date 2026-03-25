@@ -222,7 +222,7 @@ def test_property_customer_authorization_filters_to_owned_orgs(owned_org_ids, re
     )
     
     # Mock get_owned_organization_ids to return owned_org_ids
-    with patch('get_application_users_index.get_owned_organization_ids', return_value=owned_org_ids):
+    with patch.object(index, 'get_owned_organization_ids', return_value=owned_org_ids):
         result = apply_authorization(caller_groups, caller_user_id, query_input)
     
     # Result should only contain organizations that are both requested AND owned
@@ -251,7 +251,7 @@ def test_property_customer_without_filter_gets_owned_orgs(owned_org_ids, limit):
     )
     
     # Mock get_owned_organization_ids to return owned_org_ids
-    with patch('get_application_users_index.get_owned_organization_ids', return_value=owned_org_ids):
+    with patch.object(index, 'get_owned_organization_ids', return_value=owned_org_ids):
         result = apply_authorization(caller_groups, caller_user_id, query_input)
     
     # Result should contain all owned organizations

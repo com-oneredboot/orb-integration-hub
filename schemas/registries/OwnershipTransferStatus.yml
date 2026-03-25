@@ -1,28 +1,30 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:9046e5adb5b89e787e66cc638625119caf087dce839e1ac90999d0a17cbc1b80"
 name: OwnershipTransferStatus
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Status of an ownership transfer request"
-
+description: Status of an ownership transfer request
 items:
   PAYMENT_VALIDATION_REQUIRED:
-    value: "PAYMENT_VALIDATION_REQUIRED"
-    description: "Payment validation is required before transfer"
+    value: PAYMENT_VALIDATION_REQUIRED
+    description: Payment validation is required before transfer
   PAYMENT_IN_PROGRESS:
-    value: "PAYMENT_IN_PROGRESS"
-    description: "Payment is being processed"
+    value: PAYMENT_IN_PROGRESS
+    description: Payment is being processed
   PAYMENT_VALIDATED:
-    value: "PAYMENT_VALIDATED"
-    description: "Payment has been validated"
+    value: PAYMENT_VALIDATED
+    description: Payment has been validated
   COMPLETED:
-    value: "COMPLETED"
-    description: "Transfer has been completed"
+    value: COMPLETED
+    description: Transfer has been completed
   EXPIRED:
-    value: "EXPIRED"
-    description: "Transfer request has expired"
+    value: EXPIRED
+    description: Transfer request has expired
   CANCELLED:
-    value: "CANCELLED"
-    description: "Transfer was cancelled"
+    value: CANCELLED
+    description: Transfer was cancelled
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

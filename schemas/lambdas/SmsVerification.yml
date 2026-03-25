@@ -1,34 +1,28 @@
-# file: schemas/entities/SmsVerification.yml
-# author: Corey Dale Peters
-# date: 2025-06-04
-# description: GraphQL type schema for phone verification
-
-type: lambda
+version: '1'
 name: SmsVerification
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
 model:
-  authConfig:
+  attributes:
+  - name: phoneNumber
+    type: string
+    description: the phone number to verify
+    required: true
+  - name: code
+    type: string
+    description: the confirmation Code
+    required: false
+  - name: valid
+    type: boolean
+    description: whether the provided code is valid (returned during verification)
+    required: false
+lambda:
+  operation: mutation
+  auth_config:
     cognitoAuthentication:
       groups:
         USER:
-          - SmsVerification
-          - SmsVerificationResponse
+        - SmsVerification
+        - SmsVerificationResponse
         OWNER:
-          - SmsVerification
-          - SmsVerificationResponse
-  attributes:
-    phoneNumber:
-      type: string
-      required: true
-      description: the phone number to verify
-    code:
-      type: string
-      required: false
-      description: the confirmation Code
-    valid:
-      type: boolean
-      required: false
-      description: whether the provided code is valid (returned during verification)
+        - SmsVerification
+        - SmsVerificationResponse
+hash: "sha256:9bf10ae3d813eeec526fe9caeacbf19039887d4a02376a68043935689f1c3241"

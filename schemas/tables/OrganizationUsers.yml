@@ -1,80 +1,66 @@
-# file: schemas/tables/OrganizationUsers.yml
-# author: orb-integration-hub
-# date: 2026-01-09
-# description: OrganizationUsers table schema for managing user membership in organizations
-
-type: dynamodb
-pitr_enabled: false
-version: '1.0'
+version: '1'
 name: OrganizationUsers
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
 model:
-  authConfig:
+  attributes:
+  - name: userId
+    type: string
+    description: ID of the user (foreign key to Users table)
+    required: true
+  - name: organizationId
+    type: string
+    description: ID of the organization (foreign key to Organizations table)
+    required: true
+  - name: role
+    type: string
+    description: Role of the user within the organization
+    required: true
+    enum_type: OrganizationUserRole
+  - name: status
+    type: string
+    description: Status of the user's membership
+    required: true
+    enum_type: OrganizationUserStatus
+  - name: invitedBy
+    type: string
+    description: ID of the user who invited this member
+    required: false
+  - name: invitedAt
+    type: timestamp
+    description: When the invitation was sent
+    required: false
+  - name: joinedAt
+    type: timestamp
+    description: When the user accepted and joined
+    required: false
+  - name: createdAt
+    type: timestamp
+    description: When the membership record was created
+    required: true
+  - name: updatedAt
+    type: timestamp
+    description: When the membership record was last updated
+    required: true
+dynamodb:
+  partition_key: userId
+  sort_key: organizationId
+  gsi:
+  - name: OrganizationMembersIndex
+    partition_key: organizationId
+    projection_type: ALL
+    sort_key: role
+  - name: UserOrganizationsIndex
+    partition_key: userId
+    projection_type: ALL
+    sort_key: role
+  pitr_enabled: false
+appsync:
+  auth_config:
     cognitoAuthentication:
       groups:
         OWNER:
-          - '*'
+        - '*'
         EMPLOYEE:
-          - '*'
+        - '*'
         CUSTOMER:
-          - '*'
-  keys:
-    primary:
-      partition: userId
-      sort: organizationId
-      description: Composite key for user-organization membership
-    secondary:
-      - name: OrganizationMembersIndex
-        type: GSI
-        partition: organizationId
-        sort: role
-        projection_type: ALL
-        description: Index for querying members of an organization by role
-      - name: UserOrganizationsIndex
-        type: GSI
-        partition: userId
-        sort: role
-        projection_type: ALL
-        description: Index for querying organizations a user belongs to by role
-  attributes:
-    userId:
-      type: string
-      required: true
-      description: ID of the user (foreign key to Users table)
-    organizationId:
-      type: string
-      required: true
-      description: ID of the organization (foreign key to Organizations table)
-    role:
-      type: string
-      required: true
-      enum_type: OrganizationUserRole
-      description: Role of the user within the organization
-    status:
-      type: string
-      required: true
-      enum_type: OrganizationUserStatus
-      description: Status of the user's membership
-    invitedBy:
-      type: string
-      required: false
-      description: ID of the user who invited this member
-    invitedAt:
-      type: timestamp
-      required: false
-      description: When the invitation was sent
-    joinedAt:
-      type: timestamp
-      required: false
-      description: When the user accepted and joined
-    createdAt:
-      type: timestamp
-      required: true
-      description: When the membership record was created
-    updatedAt:
-      type: timestamp
-      required: true
-      description: When the membership record was last updated
+        - '*'
+hash: "sha256:7e0d06247ef87209d3c34cdaa4dc69b6978a758d3950d7029479ba367b643d63"

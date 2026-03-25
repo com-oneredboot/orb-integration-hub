@@ -1,25 +1,27 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:66af161e8732b55153890e14b0160c6832ba28f934935080439c0d4e1b854e69"
 name: ApplicationApiKeyStatus
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Application API key status"
-
+description: Application API key status
 items:
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown status"
+    value: UNKNOWN
+    description: Unknown status
   ACTIVE:
-    value: "ACTIVE"
-    description: "Active API key"
+    value: ACTIVE
+    description: Active API key
   ROTATING:
-    value: "ROTATING"
-    description: "Key is being rotated (both old and new keys valid)"
+    value: ROTATING
+    description: Key is being rotated (both old and new keys valid)
   REVOKED:
-    value: "REVOKED"
-    description: "Key has been revoked and is no longer valid"
+    value: REVOKED
+    description: Key has been revoked and is no longer valid
   EXPIRED:
-    value: "EXPIRED"
-    description: "Key has expired and is no longer valid"
+    value: EXPIRED
+    description: Key has expired and is no longer valid
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

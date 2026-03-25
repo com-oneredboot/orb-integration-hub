@@ -4,8 +4,9 @@
 
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
-| #105 | orb-schema-generator | Multi-API AppSync Configuration Not Recognized in v2.0.7 | Open | Critical |
-| #103 | orb-schema-generator | Lambda Resolvers Not Generated for SDK API in Multi-API Setup | Open | High |
+
+| #135 | orb-schema-generator | Bug: v3 GraphQL generation ignores multi-target scoping — SDK and Main schemas are identical | Open | High |
+| #134 | orb-schema-generator | Bug: orb-schema migrate-v3 strips all attributes and model data from schemas in v3.2.5 | Open (workaround: manual migration scripts) | High |
 | #91 | orb-schema-generator | Feature Request: Custom Lambda Operations for lambda-dynamodb Tables | Open | High |
 | #84 | orb-schema-generator | Bug: TypeScript Generator Creates Duplicate Query Input Types for GSIs with Same Partition Key | Open | High |
 | #83 | orb-schema-generator | Enhancement: Multi-AppSync API Support with Lambda Authorizer | Open | High |
@@ -35,6 +36,10 @@
 
 | Issue | Team | Title | Resolution Date |
 |-------|------|-------|-----------------|
+| #105 | orb-schema-generator | Multi-API AppSync Configuration Not Recognized in v2.0.7 | 2026-03-06 |
+| #103 | orb-schema-generator | Lambda Resolvers Not Generated for SDK API in Multi-API Setup | 2026-03-06 |
+| #133 | orb-schema-generator | Bug: orb-schema generate fails with v3 schemas — config format conflict, MCP inspect/generate broken | 2026-03-24 |
+| #111 | orb-schema-generator | Bug: orb-schema generate fails with target validation errors after v3 migration | 2026-03-18 |
 | #81 | orb-schema-generator | VTL Generator Creates Query Prefix for Disable Operations Instead of Mutation | 2026-01-27 |
 | #80 | orb-schema-generator | CDK code generation missing Get and ListBy resolvers | 2026-01-27 |
 | #79 | orb-schema-generator | Bug: TypeScript GraphQL Query Generator Not Updated for v0.19.0 Response Format | 2026-01-26 |

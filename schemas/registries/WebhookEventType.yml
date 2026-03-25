@@ -1,37 +1,39 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:5eb8bdf83e69bcc9d159854d3d19f57a04233e47a979b8bb835828e12a6d97bc"
 name: WebhookEventType
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Types of events that can trigger webhooks"
-
+description: Types of events that can trigger webhooks
 items:
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown event type"
+    value: UNKNOWN
+    description: Unknown event type
   USER_CREATED:
-    value: "USER_CREATED"
-    description: "A new user was created in the application"
+    value: USER_CREATED
+    description: A new user was created in the application
   USER_UPDATED:
-    value: "USER_UPDATED"
-    description: "A user's profile was updated"
+    value: USER_UPDATED
+    description: A user's profile was updated
   USER_DELETED:
-    value: "USER_DELETED"
-    description: "A user was deleted from the application"
+    value: USER_DELETED
+    description: A user was deleted from the application
   GROUP_CREATED:
-    value: "GROUP_CREATED"
-    description: "A new group was created"
+    value: GROUP_CREATED
+    description: A new group was created
   GROUP_UPDATED:
-    value: "GROUP_UPDATED"
-    description: "A group was updated"
+    value: GROUP_UPDATED
+    description: A group was updated
   GROUP_DELETED:
-    value: "GROUP_DELETED"
-    description: "A group was deleted"
+    value: GROUP_DELETED
+    description: A group was deleted
   ROLE_ASSIGNED:
-    value: "ROLE_ASSIGNED"
-    description: "A role was assigned to a user or group"
+    value: ROLE_ASSIGNED
+    description: A role was assigned to a user or group
   ROLE_REVOKED:
-    value: "ROLE_REVOKED"
-    description: "A role was revoked from a user or group"
+    value: ROLE_REVOKED
+    description: A role was revoked from a user or group
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}

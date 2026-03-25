@@ -1,28 +1,30 @@
-type: registry
-version: '1.0'
+version: '1'
+hash: "sha256:9af6bb43830b196d512684b74c1048620625f660dab29729aa78b1e60ebece27"
 name: OrganizationStatus
-targets:
-  - python-main
-  - ts-main
-  - graphql-main
-description: "Organization status"
-
+description: Organization status
 items:
   ACTIVE:
-    value: "ACTIVE"
-    description: "Active organization"
+    value: ACTIVE
+    description: Active organization
   INACTIVE:
-    value: "INACTIVE"
-    description: "Inactive organization"
+    value: INACTIVE
+    description: Inactive organization
   PENDING:
-    value: "PENDING"
-    description: "Pending activation"
+    value: PENDING
+    description: Pending activation
   SUSPENDED:
-    value: "SUSPENDED"
-    description: "Suspended organization"
+    value: SUSPENDED
+    description: Suspended organization
   DELETED:
-    value: "DELETED"
-    description: "Deleted organization"
+    value: DELETED
+    description: Deleted organization
   UNKNOWN:
-    value: "UNKNOWN"
-    description: "Unknown status"
+    value: UNKNOWN
+    description: Unknown status
+model:
+  attributes:
+  - name: value
+    type: string
+    description: Registry item value
+    required: true
+appsync: {}
