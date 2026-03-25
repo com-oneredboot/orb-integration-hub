@@ -21,12 +21,12 @@ from pathlib import Path
 # Add parent directory to path for imports when running via CDK CLI
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from aws_cdk import Stack, Tags, aws_dynamodb as dynamodb, aws_lambda as lambda_, aws_ssm as ssm
+from aws_cdk import Stack, Tags, aws_dynamodb as dynamodb, aws_ssm as ssm
 from constructs import Construct
 
 from config import Config
-from generated.main_api.app_sync_main_api_api import AppSyncMainApiApi
-from generated.sdk_api.app_sync_sdk_api_api import AppSyncSdkApiApi
+from generated.appsync.api import AppSyncApi
+from generated.appsync.sdk_api import AppSyncSdkApi
 
 
 class ApiStack(Stack):
@@ -49,26 +49,21 @@ class ApiStack(Stack):
 
         # Create Main AppSync API using generated construct
         # Lambda ARNs are read from SSM automatically by the construct
-        self.main_api = AppSyncMainApiApi(
+        self.main_api = AppSyncApi(
             self,
             "MainApi",
             tables=tables,
+            enable_api_key=True,  # Enable API key for public endpoints
+            enable_xray=True,  # Enable X-Ray tracing
         )
 
         # Create SDK AppSync API using generated construct
-        # Lambda authorizer ARN is read from SSM
-        authorizer_arn = ssm.StringParameter.value_for_string_parameter(
-            self,
-            self.config.ssm_parameter_name("lambda/authorizer/arn"),
-        )
-        lambda_authorizer = lambda_.Function.from_function_arn(
-            self, "ApiKeyAuthorizerRef", authorizer_arn
-        )
-        self.sdk_api = AppSyncSdkApiApi(
+        # Lambda authorizer ARN is read from SSM automatically by the construct
+        self.sdk_api = AppSyncSdkApi(
             self,
             "SdkApi",
             tables=tables,
-            lambda_authorizer=lambda_authorizer,
+            enable_xray=True,  # Enable X-Ray tracing
         )
 
     def _apply_tags(self) -> None:
