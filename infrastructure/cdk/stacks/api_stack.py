@@ -25,8 +25,8 @@ from aws_cdk import Stack, Tags, aws_dynamodb as dynamodb, aws_ssm as ssm
 from constructs import Construct
 
 from config import Config
-from generated.appsync.api import AppSyncApi
-from generated.appsync.sdk_api import AppSyncSdkApi
+from generated.main_api.app_sync_main_api_api import AppSyncMainApiApi
+from generated.sdk_api.app_sync_sdk_api_api import AppSyncSdkApiApi
 
 
 class ApiStack(Stack):
@@ -49,7 +49,7 @@ class ApiStack(Stack):
 
         # Create Main AppSync API using generated construct
         # Lambda ARNs are read from SSM automatically by the construct
-        self.main_api = AppSyncApi(
+        self.main_api = AppSyncMainApiApi(
             self,
             "MainApi",
             tables=tables,
@@ -59,7 +59,7 @@ class ApiStack(Stack):
 
         # Create SDK AppSync API using generated construct
         # Lambda authorizer ARN is read from SSM automatically by the construct
-        self.sdk_api = AppSyncSdkApi(
+        self.sdk_api = AppSyncSdkApiApi(
             self,
             "SdkApi",
             tables=tables,
