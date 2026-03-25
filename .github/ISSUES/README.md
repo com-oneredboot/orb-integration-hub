@@ -5,6 +5,7 @@
 | Issue | Team | Title | Status | Impact |
 |-------|------|-------|--------|--------|
 
+| #136 | orb-schema-generator | Bug: v3.2.7 generated CDK constructs have broken schema paths, changed imports/signatures | Open | High |
 | #135 | orb-schema-generator | Bug: v3 GraphQL generation ignores multi-target scoping — SDK and Main schemas are identical | Open | High |
 | #134 | orb-schema-generator | Bug: orb-schema migrate-v3 strips all attributes and model data from schemas in v3.2.5 | Open (workaround: manual migration scripts) | High |
 | #91 | orb-schema-generator | Feature Request: Custom Lambda Operations for lambda-dynamodb Tables | Open | High |
