@@ -21,7 +21,7 @@ from pathlib import Path
 # Add parent directory to path for imports when running via CDK CLI
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from aws_cdk import Stack, Tags, aws_dynamodb as dynamodb, aws_ssm as ssm
+from aws_cdk import Stack, Tags, aws_dynamodb as dynamodb, aws_lambda as lambda_, aws_ssm as ssm
 from constructs import Construct
 
 from config import Config
@@ -53,17 +53,22 @@ class ApiStack(Stack):
             self,
             "MainApi",
             tables=tables,
-            enable_api_key=True,  # Enable API key for public endpoints
-            enable_xray=True,  # Enable X-Ray tracing
         )
 
         # Create SDK AppSync API using generated construct
-        # Lambda authorizer ARN is read from SSM automatically by the construct
+        # Lambda authorizer ARN is read from SSM
+        authorizer_arn = ssm.StringParameter.value_for_string_parameter(
+            self,
+            self.config.ssm_parameter_name("lambda/authorizer/arn"),
+        )
+        lambda_authorizer = lambda_.Function.from_function_arn(
+            self, "ApiKeyAuthorizerRef", authorizer_arn
+        )
         self.sdk_api = AppSyncSdkApiApi(
             self,
             "SdkApi",
             tables=tables,
-            enable_xray=True,  # Enable X-Ray tracing
+            lambda_authorizer=lambda_authorizer,
         )
 
     def _apply_tags(self) -> None:
