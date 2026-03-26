@@ -63,4 +63,34 @@ lambda:
         - '*'
         CUSTOMER:
         - '*'
-hash: "sha256:fe79e9a9524fe12af32f3fbb2f3d19d0823b258da81c4abc0f3fe62e3f5cff37"
+dynamodb:
+  partition_key: applicationUserRoleId
+  pitr_enabled: false
+  gsi:
+    - name: UserEnvRoleIndex
+      partition_key: userId
+      sort_key: environment
+      projection_type: ALL
+    - name: AppEnvUserIndex
+      partition_key: applicationId
+      sort_key: environment
+      projection_type: ALL
+    - name: UserAppIndex
+      partition_key: userId
+      sort_key: applicationId
+      projection_type: ALL
+    - name: UserStatusIndex
+      partition_key: userId
+      sort_key: status
+      projection_type: ALL
+appsync:
+  auth_config:
+    cognitoAuthentication:
+      groups:
+        OWNER:
+        - '*'
+        EMPLOYEE:
+        - '*'
+        CUSTOMER:
+        - '*'
+hash: "sha256:032b04e66d837cafacb7c7da9a6d23a6fe00cb0c4e15aeb6948a4b1a51017a1e"

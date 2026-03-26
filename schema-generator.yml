@@ -36,6 +36,47 @@ output:
     cdk:
       base_dir: ./infrastructure/cdk/generated
       language: python
+    appsync:
+      main-api:
+        name: main-api
+        auth:
+          default: AMAZON_COGNITO_USER_POOLS
+          cognito:
+            user_pool_ssm_param: "/${customerId}/${projectId}/${environment}/cognito/user-pool-id"
+        tables:
+          - Users
+          - Organizations
+          - OrganizationUsers
+          - Applications
+          - ApplicationRoles
+          - ApplicationUserRoles
+          - ApplicationEnvironmentConfig
+          - ApplicationApiKeys
+          - Notifications
+          - OwnershipTransferRequests
+          - PrivacyRequests
+          - SmsRateLimit
+        include_operations:
+          - "*"
+        schema_output: apps/api/graphql/schema.graphql
+        resolvers_output: apps/api/graphql/resolvers
+        cdk_output: infrastructure/cdk/generated/appsync/main_api
+      sdk-api:
+        name: sdk-api
+        auth:
+          default: AWS_LAMBDA
+          lambda_authorizer:
+            function_arn_ssm_param: "/${customerId}/${projectId}/${environment}/lambda/authorizer/arn"
+            result_ttl_seconds: 300
+        tables:
+          - Users
+        include_operations:
+          - "CheckEmailExists"
+          - "CreateUserFromCognito"
+          - "GetApplicationUsers"
+        schema_output: apps/api/graphql-sdk/schema.graphql
+        resolvers_output: apps/api/graphql-sdk/resolvers
+        cdk_output: infrastructure/cdk/generated/appsync/sdk_api
 generation:
   validate_schemas: true
   validate_graphql: true

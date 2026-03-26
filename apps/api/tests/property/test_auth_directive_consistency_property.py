@@ -121,7 +121,6 @@ OWNER_ONLY_OPERATIONS = {
 }
 EMPLOYEE_OWNER_OPERATIONS = {
     "UsersCreate",
-    "UsersUpdate",
     "UsersDelete",
     "PrivacyRequestsQueryByRequestId",
     "PrivacyRequestsQueryByRequestType",
