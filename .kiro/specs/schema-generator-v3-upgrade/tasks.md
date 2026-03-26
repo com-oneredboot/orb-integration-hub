@@ -89,7 +89,7 @@ Migrate orb-integration-hub from orb-schema-generator v2.0.13 to v3.2.6. This in
     - Pre-existing integration test failures (`No module named 'lambdas'`) are unrelated to migration
     - _Requirements: 12.1, 12.2, 12.3_
 
-  - [ ]* 7.2 Write property tests for schema migration correctness
+  - [x]* 7.2 Write property tests for schema migration correctness
     - Create `apps/api/tests/test_schema_v3_migration.py` with hypothesis-based property tests
     - **Property 1: Migrated schemas contain version and valid hash**
     - **Validates: Requirements 1.1, 2.1, 3.1, 4.1, 5.1, 8.1**
@@ -108,7 +108,7 @@ Migrate orb-integration-hub from orb-schema-generator v2.0.13 to v3.2.6. This in
     - **Property 8: Generated code compatibility round-trip**
     - **Validates: Requirements 12.1, 12.2**
 
-  - [ ]* 7.3 Write unit tests for concrete migration scenarios
+  - [x]* 7.3 Write unit tests for concrete migration scenarios
     - Add unit tests to `apps/api/tests/test_schema_v3_migration.py` verifying:
     - All 12 table schemas pass strict validation (Req 1.6)
     - All 4 model schemas pass strict validation (Req 2.3)
