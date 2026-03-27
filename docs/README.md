@@ -38,6 +38,7 @@ For feature development tracking, project plans, and team coordination:
 - [Profile Components](./components/profile/) - User profile component documentation
 
 **Testing Documentation**
+- [E2E Testing (Cowork)](./e2e-testing.md) - End-to-end testing with Claude Computer
 - Testing strategies and patterns are documented in [Development Guide](./development.md)
 - Test utilities and patterns in `frontend/src/app/core/testing/`
 
@@ -50,6 +51,7 @@ For feature development tracking, project plans, and team coordination:
 | **Development** | [Dev Guide](./development.md) | [Implementation Plan](../.taskmaster/docs/core/IMPLEMENTATION_PLAN.md) |
 | **Error Handling** | [Error Strategy](./error-handling.md) | [Security Fixes](../.taskmaster/docs/security-fixes-prd.txt) |
 | **Frontend** | [Frontend Design](./frontend-design.md) | [Frontend Implementation](../.taskmaster/docs/frontend-implementation-plan.md) |
+| **E2E Testing** | [E2E Testing](./e2e-testing.md) | — |
 | **Components** | [Component Docs](./components/README.md) | [Feature Components](../.taskmaster/docs/features/) |
 
 ## 🔍 Finding Information

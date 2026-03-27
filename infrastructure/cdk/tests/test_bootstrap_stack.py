@@ -209,3 +209,43 @@ class TestBootstrapStackTags:
                 ),
             },
         )
+
+
+class TestBootstrapStackE2eCredentials:
+    """Tests for E2E test credential resources."""
+
+    def test_creates_e2e_test_email_parameter(self, template: Template) -> None:
+        """Verify E2E test user email SSM parameter is created."""
+        template.has_resource_properties(
+            "AWS::SSM::Parameter",
+            {
+                "Name": "/test/project/dev/e2e/test-user-email",
+                "Type": "String",
+                "Value": "testuser+e2e@thepetersfamily.ca",
+            },
+        )
+
+    def test_creates_e2e_test_password_secret(self, template: Template) -> None:
+        """Verify E2E test user password is stored in Secrets Manager."""
+        template.has_resource_properties(
+            "AWS::SecretsManager::Secret",
+            {
+                "Name": "test/project/dev/secrets/e2e/test-user-password",
+                "GenerateSecretString": Match.object_like(
+                    {
+                        "GenerateStringKey": "password",
+                        "PasswordLength": 16,
+                    }
+                ),
+            },
+        )
+
+    def test_exports_e2e_password_secret_name(self, template: Template) -> None:
+        """Verify E2E password secret name is exported to SSM for discovery."""
+        template.has_resource_properties(
+            "AWS::SSM::Parameter",
+            {
+                "Name": "/test/project/dev/e2e/test-user-password/secret-name",
+                "Type": "String",
+            },
+        )

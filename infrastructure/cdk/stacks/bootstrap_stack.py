@@ -58,6 +58,9 @@ class BootstrapStack(Stack):
         # Secrets
         self.sms_verification_secret = self._create_sms_verification_secret()
 
+        # E2E Test Credentials
+        self._create_e2e_test_credentials()
+
     def _apply_tags(self) -> None:
         """Apply standard tags to all resources in this stack."""
         for key, value in self.config.standard_tags.items():
@@ -581,3 +584,44 @@ class BootstrapStack(Stack):
         )
 
         return secret
+
+    def _create_e2e_test_credentials(self) -> None:
+        """Create E2E test credentials for Cowork testing.
+
+        Creates:
+        - SSM StringParameter for test user email
+        - Secrets Manager secret for test user password
+        - SSM StringParameter pointing to the password secret name
+        """
+        # Test user email (non-sensitive, stored as SSM String)
+        ssm.StringParameter(
+            self,
+            "E2eTestUserEmailParameter",
+            parameter_name=self.config.ssm_parameter_name("e2e/test-user-email"),
+            string_value="testuser+e2e@thepetersfamily.ca",
+            description="E2E test user email address for Cowork testing",
+        )
+
+        # Test user password (sensitive, stored in Secrets Manager)
+        e2e_password_secret = secretsmanager.Secret(
+            self,
+            "E2eTestUserPasswordSecret",
+            secret_name=self.config.secret_name("e2e", "test-user-password"),
+            description="E2E test user password for Cowork testing",
+            generate_secret_string=secretsmanager.SecretStringGenerator(
+                secret_string_template="{}",
+                generate_string_key="password",
+                password_length=16,
+                include_space=False,
+                exclude_characters='"@/\\',
+            ),
+        )
+
+        # Export secret name to SSM for easy discovery
+        ssm.StringParameter(
+            self,
+            "E2eTestUserPasswordSecretNameParameter",
+            parameter_name=self.config.ssm_parameter_name("e2e/test-user-password/secret-name"),
+            string_value=e2e_password_secret.secret_name,
+            description="Secrets Manager secret name for E2E test user password",
+        )

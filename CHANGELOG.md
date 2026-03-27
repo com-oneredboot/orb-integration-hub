@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Cowork E2E Testing System
+  - Created `docs/e2e-cowork-instructions.md` — self-contained instruction document with 16 sequential test workflows for Cowork (Claude Computer) to execute against the Angular frontend via ngrok
+  - Workflows cover full user lifecycle: prerequisite checks, signup (email, password, email verification, MFA TOTP setup), profile setup (name, phone verification via CloudWatch SMS logs), dashboard and profile verification, organization CRUD, application CRUD, roles and environments verification, cleanup, and logout
+  - Created `scripts/e2e-cowork-setup.sh` — Linux setup script with fail-fast sequential steps (SSO check, npm install, Angular dev server, ngrok tunnel) and `--stop` mode for teardown
+  - E2E test credentials provisioned via CDK BootstrapStack: SSM parameter for test email, Secrets Manager for test password, SSM pointer for secret name
+  - Created `docs/e2e-testing.md` — high-level overview documenting the two-machine setup (Linux + Windows/Cowork), credential paths, and usage instructions
+  - Spec: `.kiro/specs/claude-computer-e2e-testing/`
+
 ### Changed
 - Schema Generator v3 Upgrade
   - Upgraded orb-schema-generator from v2.0.13 to v3.2.7
