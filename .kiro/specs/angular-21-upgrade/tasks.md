@@ -77,14 +77,14 @@ This implementation plan guides the upgrade of the orb-integration-hub Angular f
     - Ensure zero errors and zero warnings
     - _Requirements: 2.4, 8.4, 13.2_
   
-  - [ ]* 3.7 Run unit tests and fix failures
+  - [x]* 3.7 Run unit tests and fix failures
     - Run test suite: `npm test`
     - Fix any test failures due to Angular 20 changes
     - Update test utilities if needed (e.g., TestBed.inject vs TestBed.get)
     - Ensure all tests pass
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 8.3_
   
-  - [ ]* 3.8 Write property test for build success preservation
+  - [x]* 3.8 Write property test for build success preservation
     - **Property 2: Build Success Preservation**
     - **Validates: Requirements 1.3, 2.3, 3.5, 5.3, 8.2, 13.4**
     - Test that development build succeeds
@@ -156,14 +156,14 @@ This implementation plan guides the upgrade of the orb-integration-hub Angular f
     - Ensure zero errors and zero warnings
     - _Requirements: 2.4, 8.4, 13.2_
   
-  - [ ]* 5.8 Run unit tests and fix failures
+  - [x]* 5.8 Run unit tests and fix failures
     - Run test suite: `npm test`
     - Fix any test failures due to Angular 21 changes
     - Update test utilities if needed
     - Ensure all tests pass
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 8.3_
   
-  - [ ]* 5.9 Write property test for ecosystem package compatibility
+  - [x]* 5.9 Write property test for ecosystem package compatibility
     - **Property 5: Ecosystem Package Compatibility**
     - **Validates: Requirements 3.3, 4.1, 4.2, 4.3, 4.4, 7.1, 7.2, 7.3**
     - Test that NgRx version matches Angular version
@@ -199,7 +199,7 @@ This implementation plan guides the upgrade of the orb-integration-hub Angular f
     - Verify coverage maintained or improved
     - _Requirements: 6.4, 13.3_
   
-  - [ ]* 7.2 Write property test for test coverage maintenance
+  - [x]* 7.2 Write property test for test coverage maintenance
     - **Property 9: Test Coverage Maintenance**
     - **Validates: Requirements 6.5**
     - Test that statement coverage >= baseline
@@ -220,7 +220,7 @@ This implementation plan guides the upgrade of the orb-integration-hub Angular f
     - Verify no peer dependency warnings
     - _Requirements: 3.4, 13.1_
   
-  - [ ]* 7.5 Write property test for dependency resolution success
+  - [x]* 7.5 Write property test for dependency resolution success
     - **Property 6: Dependency Resolution Success**
     - **Validates: Requirements 3.4, 13.1**
     - Test that npm install completes without errors
@@ -265,20 +265,20 @@ This implementation plan guides the upgrade of the orb-integration-hub Angular f
     - Verify NgRx DevTools work
     - _Requirements: 4.5_
   
-  - [ ]* 7.11 Write property test for functional regression prevention
+  - [x]* 7.11 Write property test for functional regression prevention
     - **Property 4: Functional Regression Prevention**
     - **Validates: Requirements 2.5, 4.5, 7.4, 7.5, 9.5, 13.5**
     - This property is validated by the entire test suite passing
     - Individual feature tests validate this property
     - Document that manual testing completed successfully
   
-  - [ ]* 7.12 Write property test for code quality standards
+  - [x]* 7.12 Write property test for code quality standards
     - **Property 3: Code Quality Standards Maintained**
     - **Validates: Requirements 2.4, 8.4, 13.2**
     - Test that linting passes with zero errors
     - Test that linting passes with zero warnings
   
-  - [ ]* 7.13 Write property test for development workflow preservation
+  - [x]* 7.13 Write property test for development workflow preservation
     - **Property 7: Development Workflow Preservation**
     - **Validates: Requirements 5.4, 8.1, 8.2, 8.3, 8.4**
     - Test that `npm start` succeeds
