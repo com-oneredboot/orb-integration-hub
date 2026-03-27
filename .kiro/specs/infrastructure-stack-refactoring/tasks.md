@@ -29,7 +29,7 @@ This implementation plan refactors CDK infrastructure stacks from technology-bas
     - Export API Key Authorizer Lambda ARN to SSM parameter
     - _Requirements: 2.5, 2.7_
   
-  - [ ]* 2.3 Write property test for Authorization Stack resource preservation
+  - [x]* 2.3 Write property test for Authorization Stack resource preservation
     - **Property 2: Resource Preservation**
     - **Validates: Requirements 2.6**
 
@@ -50,7 +50,7 @@ This implementation plan refactors CDK infrastructure stacks from technology-bas
     - Remove API Key Authorizer Lambda ARN export to SSM
     - _Requirements: 3.5_
   
-  - [ ]* 3.3 Write property test for Compute Stack resource preservation
+  - [x]* 3.3 Write property test for Compute Stack resource preservation
     - **Property 2: Resource Preservation**
     - **Validates: Requirements 3.6**
 
@@ -71,7 +71,7 @@ This implementation plan refactors CDK infrastructure stacks from technology-bas
     - Add call to `_create_sdk_api()` in `__init__` method
     - _Requirements: 4.6, 4.7, 4.8_
   
-  - [ ]* 4.3 Write unit test for SDK API creation
+  - [x]* 4.3 Write unit test for SDK API creation
     - Test that SDK API is created with correct configuration
     - Test that SDK API references API Key Authorizer Lambda ARN from SSM
     - Test that SDK API ID and URL are written to SSM
@@ -99,7 +99,7 @@ This implementation plan refactors CDK infrastructure stacks from technology-bas
     - Maintain `frontend_stack.add_dependency(bootstrap_stack)`
     - _Requirements: 2.8, 3.7, 4.9, 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8_
   
-  - [ ]* 5.3 Write property test for dependency chain integrity
+  - [x]* 5.3 Write property test for dependency chain integrity
     - **Property 3: Dependency Chain Integrity**
     - **Validates: Requirements 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 10.5**
 
@@ -133,15 +133,15 @@ This implementation plan refactors CDK infrastructure stacks from technology-bas
     - Add tests for SDK API SSM parameters
     - _Requirements: 6.2, 6.3, 6.6_
   
-  - [ ]* 7.4 Write property test for stack naming consistency
+  - [x]* 7.4 Write property test for stack naming consistency
     - **Property 1: Stack Naming Consistency**
     - **Validates: Requirements 1.4, 2.4, 3.4, 4.4, 10.2**
   
-  - [ ]* 7.5 Write property test for SSM parameter consistency
+  - [x]* 7.5 Write property test for SSM parameter consistency
     - **Property 4: SSM Parameter Consistency**
     - **Validates: Requirements 1.6, 2.7, 4.8, 10.4**
   
-  - [ ]* 7.6 Write property test for no CloudFormation exports
+  - [x]* 7.6 Write property test for no CloudFormation exports
     - **Property 5: No CloudFormation Exports**
     - **Validates: Requirements 10.3**
 
