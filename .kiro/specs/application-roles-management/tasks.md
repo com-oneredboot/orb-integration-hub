@@ -79,7 +79,7 @@ The implementation follows existing patterns in the codebase, particularly the E
     - Include helper functions for filtering and formatting
     - _Requirements: 8.5_
   
-  - [ ]* 4.4 Write property tests for reducer filter computation
+  - [x]* 4.4 Write property tests for reducer filter computation
     - **Property 11: Reducer Filter Computation**
     - **Validates: Requirements 8.5**
   
@@ -96,7 +96,7 @@ The implementation follows existing patterns in the codebase, particularly the E
     - Implement delete effect using `ApplicationRolesDelete` mutation
     - _Requirements: 8.6, 9.1, 9.2, 9.3, 9.4_
   
-  - [ ]* 4.7 Write property tests for unique ID generation
+  - [x]* 4.7 Write property tests for unique ID generation
     - **Property 12: Unique ID Generation**
     - **Validates: Requirements 9.3**
   
@@ -137,7 +137,7 @@ The implementation follows existing patterns in the codebase, particularly the E
     - Last updated column with relative time
     - _Requirements: 4.2, 4.3, 4.4, 4.5, 4.6_
   
-  - [ ]* 6.4 Write property tests for role display completeness
+  - [x]* 6.4 Write property tests for role display completeness
     - **Property 3: Role Display Completeness**
     - **Validates: Requirements 4.2, 4.3, 4.4, 4.5, 4.6**
 
@@ -148,7 +148,7 @@ The implementation follows existing patterns in the codebase, particularly the E
     - Dispatch create action on submit
     - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6_
   
-  - [ ]* 7.2 Write property tests for form validation
+  - [x]* 7.2 Write property tests for form validation
     - **Property 4: Form Validation Enforcement**
     - **Validates: Requirements 5.2, 5.3, 5.4**
   
@@ -159,7 +159,7 @@ The implementation follows existing patterns in the codebase, particularly the E
     - Show delete confirmation dialog
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 7.1, 7.2, 7.3, 7.4, 7.5, 7.6_
   
-  - [ ]* 7.4 Write property tests for edit dialog
+  - [x]* 7.4 Write property tests for edit dialog
     - **Property 6: Edit Dialog Pre-population**
     - **Property 8: Action Button Enabled State**
     - **Validates: Requirements 6.1, 7.1, 7.2**
@@ -177,7 +177,7 @@ The implementation follows existing patterns in the codebase, particularly the E
     - Render ApplicationRolesListComponent when tab is active
     - _Requirements: 3.3_
   
-  - [ ]* 8.3 Write property tests for tab enabled state
+  - [x]* 8.3 Write property tests for tab enabled state
     - **Property 1: Tab Enabled Based on Application Status**
     - **Property 2: Role Count Badge Accuracy**
     - **Validates: Requirements 3.1, 3.2, 3.4**
@@ -198,7 +198,7 @@ The implementation follows existing patterns in the codebase, particularly the E
     - Handle errors gracefully (log but don't block activation)
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6, 10.7_
   
-  - [ ]* 10.2 Write property tests for default roles creation
+  - [x]* 10.2 Write property tests for default roles creation
     - **Property 13: Default Roles on Activation**
     - **Validates: Requirements 10.1, 10.2, 10.3, 10.4, 10.5, 10.6**
 
