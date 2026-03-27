@@ -217,6 +217,10 @@ def lambda_handler(event, context):
         logger.debug(f"Rate limit status: {rate_limit_message}")
         code = generate_verification_code(phone_number, current_time, secret)
 
+        # Log verification code in dev environment for E2E testing
+        if os.getenv("ENVIRONMENT") == "dev":
+            logger.info(f"[DEV] Verification code for {phone_number}: {code}")
+
         # SMS parameters
         sns_parameters = {
             "PhoneNumber": phone_number,
