@@ -62,7 +62,7 @@ The implementation follows 8 phases: Core Infrastructure, Authentication System,
     - Add error handling with helpful messages for authentication failures
     - _Requirements: 4.3, 4.4, 2.1, 2.2_
   
-  - [ ]* 2.2 Write unit tests for auth helper
+  - [x]* 2.2 Write unit tests for auth helper
     - Test that `getTestUser()` throws error when credentials are missing
     - Test that `getTestUser()` returns correct credentials when environment variables are set
     - Test that `login()` error message includes troubleshooting steps
@@ -108,14 +108,14 @@ The implementation follows 8 phases: Core Infrastructure, Authentication System,
     - Throw error with message instructing to run `aws sso login --profile sso-orb-dev`
     - _Requirements: 11.7_
   
-  - [ ]* 3.6 Write unit tests for fixtures
+  - [x]* 3.6 Write unit tests for fixtures
     - Test that resource creation functions add `e2e-test-` prefix
     - Test that cleanup continues on individual resource failures
     - Test that AWS credential errors include SSO login command
     - Test that GraphQL errors include operation details
     - _Requirements: 5.1, 5.4, 11.7_
   
-  - [ ]* 3.7 Write property test for test data naming convention
+  - [x]* 3.7 Write property test for test data naming convention
     - **Property 1: Test Data Naming Convention**
     - **Validates: Requirements 5.1**
     - Generate random resource names using fast-check
@@ -135,7 +135,7 @@ The implementation follows 8 phases: Core Infrastructure, Authentication System,
     - Implement `generateTestId()` that generates unique identifiers with prefix
     - _Requirements: 8.7, 9.5, 9.6, 11.7_
   
-  - [ ]* 4.2 Write unit tests for utils
+  - [x]* 4.2 Write unit tests for utils
     - Test that `takeTimestampedScreenshot()` creates directory if not exists
     - Test that `generateTestId()` produces unique identifiers
     - Test that `checkAWSCredentials()` throws error with SSO login command when credentials invalid
@@ -198,7 +198,7 @@ The implementation follows 8 phases: Core Infrastructure, Authentication System,
     - Include best practices for test isolation and reliability
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 10.6_
   
-  - [ ]* 7.2 Submit pull request to orb-templates
+  - [x]* 7.2 Submit pull request to orb-templates
     - Create branch in orb-templates repository
     - Commit E2E testing standards document
     - Create pull request with description
@@ -248,7 +248,7 @@ The implementation follows 8 phases: Core Infrastructure, Authentication System,
     - Test that npm scripts are defined correctly
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.6, 3.1, 3.2, 3.3, 3.4, 3.5_
   
-  - [ ]* 10.2 Write property test for test cleanup execution
+  - [x]* 10.2 Write property test for test cleanup execution
     - **Property 2: Test Cleanup Execution**
     - **Validates: Requirements 5.2, 5.3**
     - Generate random test files using fast-check
@@ -256,7 +256,7 @@ The implementation follows 8 phases: Core Infrastructure, Authentication System,
     - Verify all tests with resource creation have `afterEach` cleanup hooks
     - Run 100+ iterations
   
-  - [ ]* 10.3 Write property test for authentication state persistence
+  - [x]* 10.3 Write property test for authentication state persistence
     - **Property 3: Authentication State Persistence**
     - **Validates: Requirements 4.4**
     - Run login function with test credentials
@@ -264,7 +264,7 @@ The implementation follows 8 phases: Core Infrastructure, Authentication System,
     - Verify file contains valid auth tokens
     - Run 100+ iterations
   
-  - [ ]* 10.4 Write property test for AWS SDK configuration
+  - [x]* 10.4 Write property test for AWS SDK configuration
     - **Property 4: AWS SDK Configuration**
     - **Validates: Requirements 11.1**
     - Generate random AWS SDK client instantiations
@@ -272,7 +272,7 @@ The implementation follows 8 phases: Core Infrastructure, Authentication System,
     - Verify all clients use `us-east-1` region
     - Run 100+ iterations
   
-  - [ ]* 10.5 Write property test for AWS credential error handling
+  - [x]* 10.5 Write property test for AWS credential error handling
     - **Property 5: AWS Credential Error Handling**
     - **Validates: Requirements 11.7**
     - Simulate expired credentials
@@ -280,7 +280,7 @@ The implementation follows 8 phases: Core Infrastructure, Authentication System,
     - Verify error messages contain SSO login command
     - Run 100+ iterations
   
-  - [ ]* 10.6 Write property test for test data seeding fallback
+  - [x]* 10.6 Write property test for test data seeding fallback
     - **Property 6: Test Data Seeding Fallback**
     - **Validates: Requirements 12.5**
     - Create `.test-data.json` with random resource IDs
