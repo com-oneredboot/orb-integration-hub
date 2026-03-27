@@ -93,6 +93,24 @@ repos:
         pass_filenames: false
 
       # ============================================
+      # Pipfile Lock Freshness
+      # ============================================
+
+      - id: pipfile-lock-check
+        name: Check Pipfile.lock is up to date
+        entry: bash -c 'pipenv verify || (echo "ERROR: Pipfile.lock is out of sync with Pipfile. Run: pipenv lock" && exit 1)'
+        language: system
+        files: ^Pipfile$
+        pass_filenames: false
+
+      - id: pipfile-lock-check-infra
+        name: Check infrastructure Pipfile.lock is up to date
+        entry: bash -c 'cd infrastructure && pipenv verify || (echo "ERROR: infrastructure/Pipfile.lock is out of sync. Run: cd infrastructure && pipenv lock" && exit 1)'
+        language: system
+        files: ^infrastructure/Pipfile$
+        pass_filenames: false
+
+      # ============================================
       # General File Hygiene
       # ============================================
 

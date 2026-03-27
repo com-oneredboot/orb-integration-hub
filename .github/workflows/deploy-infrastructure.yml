@@ -71,6 +71,7 @@ jobs:
         working-directory: infrastructure
         run: |
           pip install pipenv
+          pipenv verify || (echo "❌ Pipfile.lock is out of sync with Pipfile. Run 'pipenv lock' locally and commit." && exit 1)
           pipenv install --dev
 
       - name: Skip tests warning
