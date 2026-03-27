@@ -221,7 +221,7 @@ class TestBootstrapStackE2eCredentials:
             {
                 "Name": "/test/project/dev/e2e/test-user-email",
                 "Type": "String",
-                "Value": "testuser+e2e@thepetersfamily.ca",
+                "Value": "corey+e2e@thepetersfamily.ca",
             },
         )
 

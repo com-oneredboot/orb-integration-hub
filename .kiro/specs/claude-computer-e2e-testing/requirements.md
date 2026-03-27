@@ -352,7 +352,7 @@ This spec defines a comprehensive end-to-end testing plan designed for execution
 
   NOTEPAD (Test Data):
   ─────────────────────────────────────────────────
-  Test Email: testuser+e2e@thepetersfamily.ca
+  Test Email: corey+e2e@thepetersfamily.ca
   Test Password: (stored in SSM)
   TOTP Secret: JBSWY3DPEHPK3PXP
   Phone: +15551234567

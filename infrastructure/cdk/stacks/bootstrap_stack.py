@@ -598,7 +598,7 @@ class BootstrapStack(Stack):
             self,
             "E2eTestUserEmailParameter",
             parameter_name=self.config.ssm_parameter_name("e2e/test-user-email"),
-            string_value="testuser+e2e@thepetersfamily.ca",
+            string_value="corey+e2e@thepetersfamily.ca",
             description="E2E test user email address for Cowork testing",
         )
 
